@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NetSpy</title>
+    <link rel="stylesheet" href="styles/variables.css">
+    <link rel="stylesheet" href="styles/base.css">
+    <link rel="stylesheet" href="styles/toolbar.css">
+    <link rel="stylesheet" href="styles/layout.css">
+    <link rel="stylesheet" href="styles/request-table.css">
+    <link rel="stylesheet" href="styles/detail-panel.css">
+    <link rel="stylesheet" href="styles/kv-editor.css">
+    <link rel="stylesheet" href="styles/body-editor.css">
+    <link rel="stylesheet" href="styles/intercept.css">
+    <link rel="stylesheet" href="styles/buttons.css">
+    <link rel="stylesheet" href="styles/json-viewer.css">
+    <link rel="stylesheet" href="styles/media-preview.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Toolbar Row 1: Recording & Filters -->
+        <div class="toolbar-row">
+            <div class="toolbar-group">
+                <button class="icon-btn" id="recordBtn" title="Toggle Recording">
+                    <span class="icon-record"></span>
+                </button>
+                <button class="icon-btn" id="clearBtn" title="Clear">
+                    <span class="icon-clear"></span>
+                </button>
+                <button class="icon-btn" id="refreshBtn" title="Refresh Page">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="23 4 23 10 17 10"></polyline>
+                        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="toolbar-divider"></div>
+
+            <!-- Protocol Filters -->
+            <div class="filter-group protocol-filters">
+                <button class="filter-chip active" data-filter="all">All</button>
+                <button class="filter-chip" data-filter="http">Http</button>
+                <button class="filter-chip" data-filter="https">Https</button>
+                <!-- <button class="filter-chip" data-filter="ws">WS</button> -->
+            </div>
+
+            <div class="toolbar-divider"></div>
+
+            <!-- Content Type Filters -->
+            <div class="filter-group type-filters">
+                <button class="filter-chip active" data-filter="all">All</button>
+                <button class="filter-chip" data-filter="api">API</button>
+                <button class="filter-chip" data-filter="json">JSON</button>
+                <button class="filter-chip" data-filter="xml">XML</button>
+                <button class="filter-chip" data-filter="html">HTML</button>
+                <button class="filter-chip" data-filter="js">JS</button>
+                <button class="filter-chip" data-filter="css">CSS</button>
+                <button class="filter-chip" data-filter="img">Image</button>
+            </div>
+
+            <div class="toolbar-divider"></div>
+
+            <!-- Status Filters -->
+            <div class="filter-group status-filters">
+                <button class="filter-chip" data-filter="1xx">1xx</button>
+                <button class="filter-chip" data-filter="2xx">2xx</button>
+                <button class="filter-chip" data-filter="3xx">3xx</button>
+                <button class="filter-chip" data-filter="4xx">4xx</button>
+                <button class="filter-chip" data-filter="5xx">5xx</button>
+            </div>
+        </div>
+
+        <!-- Toolbar Row 2: Search & Actions -->
+        <div class="toolbar-row">
+            <div class="search-box">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input type="text" id="searchInput" placeholder="Filter by URL, method, status...">
+            </div>
+
+            <div class="toolbar-options">
+                <label class="checkbox-option">
+                    <input type="checkbox" id="preserveLog">
+                    <span>Preserve log</span>
+                </label>
+                <label class="checkbox-option">
+                    <input type="checkbox" id="groupByDomain">
+                    <span>Group</span>
+                </label>
+            </div>
+
+            <div class="toolbar-divider"></div>
+
+            <!-- Intercept Controls -->
+            <div class="intercept-controls">
+                <label class="toggle-switch">
+                    <input type="checkbox" id="interceptToggle">
+                    <span class="toggle-slider"></span>
+                </label>
+                <span class="intercept-label">Intercept</span>
+
+                <select id="interceptMode" class="mini-select">
+                    <option value="request">Request</option>
+                    <option value="response">Response</option>
+                    <option value="both">Both</option>
+                </select>
+
+                <input type="text" id="interceptPattern" class="pattern-input" value="*" placeholder="URL pattern">
+
+                <select id="pollingStrategy" class="mini-select" title="Polling Request Strategy">
+                    <option value="keep_latest">Keep Latest</option>
+                    <option value="block_old">Block Old</option>
+                    <option value="block_all">Block All</option>
+                    <option value="keep_all">Keep All</option>
+                    <option value="queue">Queue</option>
+                </select>
+            </div>
+
+            <div class="request-counter">
+                <span id="requestCount">0</span> requests
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Left Panel: Request List -->
+            <div class="left-panel" id="leftPanel">
+                <!-- Intercept Panel (Top of left panel) -->
+                <div class="intercept-panel hidden" id="interceptPanel">
+                    <div class="intercept-header">
+                        <span class="intercept-icon">⏸</span>
+                        <span class="intercept-title">Paused Requests</span>
+                        <span class="paused-count" id="pausedCount">0</span>
+                        <button class="intercept-collapse" id="interceptCollapse" title="Collapse">▼</button>
+                    </div>
+                    <div class="paused-list" id="pausedList"></div>
+                </div>
+
+                <!-- Request Table -->
+                <div class="request-table-container">
+                    <table class="request-table" id="requestTable">
+                        <thead>
+                            <tr>
+                                <th class="col-id">ID</th>
+                                <th class="col-icon"></th>
+                                <th class="col-method">Method</th>
+                                <th class="col-url">URL</th>
+                                <th class="col-status">Status</th>
+                                <th class="col-type">Type</th>
+                                <th class="col-size">Size</th>
+                                <th class="col-time">Time</th>
+                            </tr>
+                        </thead>
+                        <tbody id="requestList"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Resizer -->
+            <div class="resizer" id="resizer"></div>
+
+            <!-- Right Panel: Detail View -->
+            <div class="right-panel" id="rightPanel">
+                <!-- Empty State -->
+                <div class="empty-state" id="emptyState">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="1.5">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                    </svg>
+                    <p>Select a request to view details</p>
+                </div>
+
+                <!-- Detail View -->
+                <div class="detail-view hidden" id="detailView">
+                    <!-- Request Header Bar -->
+                    <div class="detail-header">
+                        <select id="editMethod" class="method-select">
+                            <option value="GET">GET</option>
+                            <option value="POST">POST</option>
+                            <option value="PUT">PUT</option>
+                            <option value="DELETE">DELETE</option>
+                            <option value="PATCH">PATCH</option>
+                            <option value="HEAD">HEAD</option>
+                            <option value="OPTIONS">OPTIONS</option>
+                        </select>
+                        <input type="text" id="editUrl" class="url-input" placeholder="Request URL">
+                        <button id="sendBtn" class="send-btn primary">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <line x1="22" y1="2" x2="11" y2="13"></line>
+                                <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                            </svg>
+                            <span>Send</span>
+                        </button>
+                    </div>
+
+                    <!-- Request Section -->
+                    <div class="detail-section request-section">
+                        <div class="tabs-container" id="requestTabsContainer"></div>
+                        <div class="section-content" id="requestContent">
+                            <!-- Tab Contents -->
+                            <div class="tab-pane active" id="paramsPane"></div>
+                            <div class="tab-pane" id="headersPane"></div>
+                            <div class="tab-pane" id="bodyPane"></div>
+                            <div class="tab-pane" id="cookiesPane"></div>
+                        </div>
+                    </div>
+
+                    <!-- Section Divider (Horizontal Resizer) -->
+                    <div class="section-divider h-resizer" id="hResizer"></div>
+
+                    <!-- Response Section -->
+                    <div class="detail-section response-section">
+                        <div class="section-header">
+                            <span class="section-title">Response</span>
+                            <span class="response-status" id="responseStatus"></span>
+                            <span class="response-time" id="responseTime"></span>
+                            <span class="response-size" id="responseSize"></span>
+                        </div>
+                        <div class="tabs-container" id="responseTabsContainer"></div>
+                        <div class="section-content" id="responseContent">
+                            <div class="tab-pane active" id="resBodyPane">
+                                <div class="body-toolbar">
+                                    <div class="format-toggle">
+                                        <button class="format-btn active" data-format="pretty">Pretty</button>
+                                        <button class="format-btn" data-format="raw">Raw</button>
+                                    </div>
+                                    <div class="body-actions">
+                                        <button class="icon-btn-sm" id="copyBody" title="Copy">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="2">
+                                                <rect x="9" y="9" width="13" height="13" rx="2"></rect>
+                                                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1">
+                                                </path>
+                                            </svg>
+                                        </button>
+                                        <button class="icon-btn-sm" id="downloadBody" title="Download">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="2">
+                                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                                                <polyline points="7 10 12 15 17 10"></polyline>
+                                                <line x1="12" y1="15" x2="12" y2="3"></line>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="body-content" id="responseBodyContent"></div>
+                            </div>
+                            <div class="tab-pane" id="resHeadersPane"></div>
+                            <div class="tab-pane" id="resCookiesPane"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="js/main.js"></script>
+</body>
+
+</html>

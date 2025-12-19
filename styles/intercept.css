@@ -1,0 +1,423 @@
+/* styles/intercept.css - Intercept Panel */
+
+/* ==========================================
+   Intercept Panel (Left Panel Top)
+   ========================================== */
+
+.intercept-panel {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(245, 158, 11, 0.05) 100%);
+  border-bottom: 2px solid var(--warning);
+  padding: var(--spacing-md) var(--spacing-lg);
+  flex-shrink: 0;
+}
+
+.intercept-panel.hidden {
+  display: none;
+}
+
+.intercept-header {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-sm);
+}
+
+.intercept-icon {
+  font-size: 16px;
+}
+
+.intercept-title {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--warning);
+  flex: 1;
+}
+
+.paused-count {
+  background: var(--warning);
+  color: var(--bg-primary);
+  padding: 2px 10px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 700;
+  min-width: 24px;
+  text-align: center;
+}
+
+.intercept-collapse {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 4px;
+  font-size: 10px;
+  transition: transform var(--transition-fast);
+}
+
+.intercept-collapse:hover {
+  color: var(--text-primary);
+}
+
+.intercept-panel.collapsed .intercept-collapse {
+  transform: rotate(-90deg);
+}
+
+.intercept-panel.collapsed .paused-list {
+  display: none;
+}
+
+.paused-count {
+  background: var(--warning);
+  color: var(--bg-primary);
+  padding: 2px 10px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.paused-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+.paused-empty {
+  text-align: center;
+  color: var(--text-muted);
+  padding: var(--spacing-md);
+  font-style: italic;
+}
+
+.paused-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-md);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-color);
+  transition: all var(--transition-fast);
+}
+
+.paused-item:hover {
+  border-color: var(--warning);
+  box-shadow: 0 0 0 1px var(--warning);
+}
+
+.paused-info {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  flex: 1;
+  min-width: 0;
+}
+
+.paused-method {
+  font-weight: 600;
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  text-transform: uppercase;
+}
+
+.paused-method.method-get {
+  background: rgba(34, 197, 94, 0.15);
+  color: var(--method-get);
+}
+
+.paused-method.method-post {
+  background: rgba(59, 130, 246, 0.15);
+  color: var(--method-post);
+}
+
+.paused-method.method-put {
+  background: rgba(245, 158, 11, 0.15);
+  color: var(--method-put);
+}
+
+.paused-method.method-delete {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--method-delete);
+}
+
+.paused-url {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.paused-stage {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-hover);
+  color: var(--text-muted);
+}
+
+.paused-stage.stage-request {
+  background: rgba(59, 130, 246, 0.15);
+  color: var(--info);
+}
+
+.paused-stage.stage-response {
+  background: rgba(139, 92, 246, 0.15);
+  color: var(--accent-secondary);
+}
+
+.paused-actions {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+.paused-btn {
+  padding: var(--spacing-xs) var(--spacing-md);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  font-size: 11px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.paused-btn:hover {
+  background: var(--bg-hover);
+}
+
+.paused-btn.edit-btn:hover {
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+}
+
+.paused-btn.continue-btn:hover {
+  border-color: var(--success);
+  color: var(--success);
+}
+
+.paused-btn.drop-btn:hover {
+  border-color: var(--error);
+  color: var(--error);
+}
+
+/* Request Table Container */
+.request-table-container {
+  flex: 1;
+  overflow: auto;
+}
+
+/* Left Panel Layout Fix */
+.left-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+
+/* Intercept Panel - Paused Requests */
+
+/* ==========================================
+   Intercept Panel - Paused Requests
+   ========================================== */
+
+#interceptPanel {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.1) 0%, rgba(249, 115, 22, 0.1) 100%);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  margin: var(--spacing-sm) var(--spacing-md);
+}
+
+.intercept-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-sm);
+}
+
+.intercept-panel-title {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-weight: 600;
+  color: var(--warning);
+}
+
+.paused-count {
+  background: var(--warning);
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+#pausedList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.paused-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-sm);
+  padding: var(--spacing-sm) var(--spacing-md);
+}
+
+.paused-info {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  flex: 1;
+  min-width: 0;
+}
+
+.paused-method {
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  flex-shrink: 0;
+}
+
+.paused-url {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.paused-url:hover {
+  max-width: 400px;
+  background: var(--bg-tertiary);
+  padding: 4px 8px;
+  border-radius: var(--radius-sm);
+  white-space: normal;
+  word-break: break-all;
+}
+
+.paused-stage {
+  flex-shrink: 0;
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+}
+
+.paused-actions {
+  display: flex;
+  gap: var(--spacing-xs);
+  flex-wrap: wrap;
+}
+
+.paused-btn {
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 500;
+  border: 1px solid var(--border-color);
+  background: var(--bg-tertiary);
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+
+.paused-btn:hover {
+  transform: translateY(-1px);
+}
+
+.paused-btn.edit-btn:hover {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: white;
+}
+
+.paused-btn.mock-btn:hover {
+  background: var(--accent-secondary);
+  border-color: var(--accent-secondary);
+  color: white;
+}
+
+.paused-btn.continue-btn:hover {
+  background: var(--success);
+  border-color: var(--success);
+  color: white;
+}
+
+.paused-btn.drop-btn:hover {
+  background: var(--error);
+  border-color: var(--error);
+  color: white;
+}
+
+.paused-empty {
+  text-align: center;
+  color: var(--text-muted);
+  padding: var(--spacing-md);
+}
+
+/* Responsive: Narrow window - stack vertically */
+@media (max-width: 600px) {
+  .paused-item {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--spacing-sm);
+  }
+
+  .paused-info {
+    flex-wrap: wrap;
+  }
+
+  .paused-url {
+    width: 100%;
+    flex: none;
+  }
+
+  .paused-actions {
+    justify-content: flex-end;
+  }
+}
+
+/* Response Body Editor Actions */
+.response-body-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-sm);
+}
+
+.response-body-actions {
+  display: flex;
+  gap: var(--spacing-xs);
+}
+
+.body-action-btn {
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  font-size: 11px;
+  font-weight: 500;
+  border: 1px solid var(--border-color);
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.body-action-btn:hover {
+  background: var(--accent-primary);
+  border-color: var(--accent-primary);
+  color: white;

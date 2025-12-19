@@ -1,0 +1,46 @@
+/* styles/layout.css - Main Content Layout */
+
+/* ==========================================
+   Main Content
+   ========================================== */
+
+.main-content {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Left Panel - Request List */
+.left-panel {
+  width: 50%;
+  min-width: 400px;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-primary);
+  border-right: 1px solid var(--border-color);
+  overflow: hidden;
+}
+
+/* Resizer */
+.resizer {
+  width: 4px;
+  background: var(--border-color);
+  cursor: col-resize;
+  transition: background var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.resizer:hover,
+.resizer.active {
+  background: var(--accent-primary);
+}
+
+/* Right Panel - Detail View */
+.right-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-secondary);
+  overflow: hidden;
+}
+

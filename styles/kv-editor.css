@@ -1,0 +1,168 @@
+/* styles/kv-editor.css - KV Editor */
+
+/* ==========================================
+   Postman-Style KV Editor
+   ========================================== */
+
+.kv-editor {
+  background: var(--bg-primary);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.kv-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.kv-title {
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.kv-count {
+  font-size: 11px;
+  color: var(--text-muted);
+  background: var(--bg-hover);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+}
+
+.kv-empty {
+  padding: var(--spacing-xl);
+  text-align: center;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.kv-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.kv-table th {
+  padding: var(--spacing-sm) var(--spacing-md);
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.kv-table th.kv-check {
+  width: 40px;
+  text-align: center;
+}
+
+.kv-row {
+  transition: background var(--transition-fast);
+}
+
+.kv-row:hover {
+  background: var(--bg-hover);
+}
+
+.kv-row td {
+  padding: var(--spacing-xs) var(--spacing-md);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.kv-row .kv-check {
+  text-align: center;
+}
+
+.kv-input {
+  width: 100%;
+  padding: var(--spacing-sm);
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  transition: all var(--transition-fast);
+}
+
+.kv-input:focus {
+  background: var(--bg-secondary);
+  border-color: var(--accent-primary);
+  outline: none;
+}
+
+.kv-input.key {
+  color: var(--accent-primary);
+}
+
+.kv-input.value {
+  color: var(--text-primary);
+}
+
+
+/* KV Editor Enhancements */
+
+/* ==========================================
+   KV Editor Enhancements
+   ========================================== */
+
+.kv-add-btn {
+  padding: var(--spacing-xs) var(--spacing-md);
+  border: 1px dashed var(--accent-primary);
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--accent-primary);
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.kv-add-btn:hover {
+  background: rgba(99, 102, 241, 0.1);
+  border-style: solid;
+}
+
+.kv-actions {
+  width: 40px;
+  text-align: center;
+}
+
+.kv-delete-btn {
+  width: 24px;
+  height: 24px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 16px;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  opacity: 0;
+}
+
+.kv-row:hover .kv-delete-btn {
+  opacity: 1;
+}
+
+.kv-delete-btn:hover {
+  background: rgba(239, 68, 68, 0.15);
+  color: var(--error);
+}
+
+.kv-row.disabled {
+  opacity: 0.5;
+}
+
+.kv-row.disabled .kv-input {
+  text-decoration: line-through;
+}
+

@@ -1,0 +1,41 @@
+{
+  "manifest_version": 3,
+  "name": "NetSpy - Network Request Modifier",
+  "version": "1.3",
+  "description": "Capture, modify and replay network requests from DevTools.",
+  "permissions": [
+    "webRequest",
+    "storage",
+    "notifications",
+    "debugger"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "devtools_page": "devtools.html",
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "NetSpy - 网络请求调试",
+    "default_icon": {
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png"
+    }
+  },
+  "commands": {
+    "open-netspy": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+N",
+        "mac": "Command+Shift+N"
+      },
+      "description": "Show NetSpy instructions"
+    }
+  },
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}

@@ -1,0 +1,191 @@
+/* styles/request-table.css - Request Table */
+
+/* ==========================================
+   Request Table
+   ========================================== */
+
+.request-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+.request-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--bg-secondary);
+}
+
+.request-table th {
+  padding: var(--spacing-sm) var(--spacing-md);
+  text-align: left;
+  font-weight: 600;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border-color);
+  white-space: nowrap;
+}
+
+.request-table tbody {
+  overflow-y: auto;
+}
+
+.request-row {
+  cursor: pointer;
+  transition: background var(--transition-fast);
+}
+
+.request-row:hover {
+  background: var(--bg-hover);
+}
+
+.request-row.selected {
+  background: var(--bg-selected);
+}
+
+.request-row td {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-bottom: 1px solid var(--border-color);
+  white-space: nowrap;
+}
+
+/* Column Widths */
+.col-id {
+  width: 40px;
+  color: var(--text-muted);
+}
+
+.col-icon {
+  width: 30px;
+  text-align: center;
+}
+
+.col-method {
+  width: 70px;
+  font-weight: 600;
+}
+
+.col-url {
+  min-width: 200px;
+}
+
+.col-status {
+  width: 80px;
+}
+
+.col-type {
+  width: 60px;
+  color: var(--text-muted);
+}
+
+.col-size {
+  width: 70px;
+  color: var(--text-muted);
+  text-align: right;
+}
+
+.col-time {
+  width: 70px;
+  color: var(--text-muted);
+  text-align: right;
+}
+
+/* URL truncation */
+.truncate {
+  max-width: 250px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Method Colors */
+.method-get {
+  color: var(--method-get);
+}
+
+.method-post {
+  color: var(--method-post);
+}
+
+.method-put {
+  color: var(--method-put);
+}
+
+.method-patch {
+  color: var(--method-patch);
+}
+
+.method-delete {
+  color: var(--method-delete);
+}
+
+.method-head {
+  color: var(--method-head);
+}
+
+.method-options {
+  color: var(--method-options);
+}
+
+/* Status Badge */
+.status-badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.status-2xx {
+  background: rgba(34, 197, 94, 0.2);
+  color: var(--status-2xx);
+}
+
+.status-3xx {
+  background: rgba(59, 130, 246, 0.2);
+  color: var(--status-3xx);
+}
+
+.status-4xx {
+  background: rgba(245, 158, 11, 0.2);
+  color: var(--status-4xx);
+}
+
+.status-5xx {
+  background: rgba(239, 68, 68, 0.2);
+  color: var(--status-5xx);
+}
+
+.status-pending {
+  background: rgba(113, 113, 122, 0.2);
+  color: var(--status-pending);
+}
+
+/* Group Header */
+.group-header {
+  background: var(--bg-tertiary);
+  cursor: pointer;
+}
+
+.group-header-cell {
+  padding: var(--spacing-sm) var(--spacing-md) !important;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.group-toggle {
+  display: inline-block;
+  width: 16px;
+  color: var(--text-muted);
+}
+
+.group-name {
+  color: var(--accent-primary);
+}
+
+.group-count {
+  color: var(--text-muted);
+  font-weight: 400;
+  margin-left: var(--spacing-sm);
+}
+

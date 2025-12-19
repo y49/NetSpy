@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NetSpy</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+
+<body>
+    <div class="terminal">
+        <div class="header">
+            <div class="dot red"></div>
+            <div class="dot yellow"></div>
+            <div class="dot green"></div>
+            <span class="title">netspy@devtools</span>
+        </div>
+
+        <div class="content">
+            <div>
+                <span class="prompt">$</span>
+                <span class="command"> netspy --start</span>
+                <span class="blink">_</span>
+            </div>
+
+            <div class="output">
+                <div>→ Press <span class="key">F12</span> to open DevTools</div>
+                <div>→ Find <span class="highlight">NetSpy</span> tab</div>
+                <div>→ Start intercepting</div>
+            </div>
+        </div>
+
+        <div class="footer">
+            <span></span>v1.3.0</span>
+            <span class="divider">|</span>
+            <a href="help.html" target="_blank" class="help-link">📖 Help</a>
+        </div>
+    </div>
+
+    <script src="popup.js"></script>
+</body>
+
+</html>

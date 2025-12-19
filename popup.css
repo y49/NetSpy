@@ -1,0 +1,126 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    width: 320px;
+    height: 200px;
+    font-family: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+    background: #0d1117;
+    color: #c9d1d9;
+    overflow: hidden;
+}
+
+.terminal {
+    padding: 16px;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+.header {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 16px;
+}
+
+.dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.dot.red {
+    background: #ff5f56;
+}
+
+.dot.yellow {
+    background: #ffbd2e;
+}
+
+.dot.green {
+    background: #27c93f;
+}
+
+.title {
+    margin-left: auto;
+    font-size: 11px;
+    color: #6e7681;
+}
+
+.content {
+    flex: 1;
+}
+
+.prompt {
+    color: #58a6ff;
+}
+
+.command {
+    color: #7ee787;
+}
+
+.output {
+    margin: 12px 0;
+    line-height: 1.6;
+}
+
+.blink {
+    animation: blink 1s infinite;
+}
+
+@keyframes blink {
+
+    0%,
+    50% {
+        opacity: 1;
+    }
+
+    51%,
+    100% {
+        opacity: 0;
+    }
+}
+
+.highlight {
+    color: #ffa657;
+    font-weight: bold;
+}
+
+.key {
+    display: inline-block;
+    background: #21262d;
+    border: 1px solid #30363d;
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 12px;
+    margin: 0 2px;
+    color: #f0f6fc;
+}
+
+.footer {
+    font-size: 11px;
+    color: #6e7681;
+    border-top: 1px solid #21262d;
+    padding-top: 12px;
+    margin-top: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.footer .divider {
+    color: #30363d;
+}
+
+.footer .help-link {
+    color: #58a6ff;
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.footer .help-link:hover {
+    color: #79c0ff;
+}

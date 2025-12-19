@@ -1,0 +1,137 @@
+/* styles/buttons.css - Send Button States */
+
+/* ==========================================
+   Send Button States
+   ========================================== */
+
+.send-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.send-btn.success {
+  background: var(--success);
+}
+
+.send-btn.error {
+  background: var(--error);
+}
+
+.spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Sent request marker */
+.request-row.sent .col-icon::before {
+  content: '🚀';
+}
+
+/* KV Value Textarea */
+.kv-input.kv-value {
+  min-height: 32px;
+  resize: vertical;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.4;
+  white-space: pre-wrap;
+}
+
+/* Response Editor (for intercept) */
+.response-editor {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.response-status-editor {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.response-status-editor label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.status-select {
+  padding: 6px 12px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-size: 12px;
+  font-family: var(--font-mono);
+  cursor: pointer;
+}
+
+.status-select:focus {
+  outline: none;
+  border-color: var(--accent-color);
+}
+
+.status-input {
+  width: 80px;
+  padding: 6px 10px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-size: 12px;
+  font-family: var(--font-mono);
+}
+
+.status-input:focus {
+  outline: none;
+  border-color: var(--accent-color);
+}
+
+.response-body-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.response-body-editor label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.response-body-textarea {
+  width: 100%;
+  min-height: 200px;
+  padding: 12px;
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.response-body-textarea:focus {
+  outline: none;
+  border-color: var(--accent-color);
+}
+
+.response-body-textarea::placeholder {
+  color: var(--text-muted);
+}
+

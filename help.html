@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NetSpy - Help & Documentation</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a2e 100%);
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 24px;
+            line-height: 1.8;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 48px;
+            padding: 40px 20px;
+            background: rgba(102, 126, 234, 0.1);
+            border-radius: 16px;
+            border: 1px solid rgba(102, 126, 234, 0.2);
+        }
+
+        .logo {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        h1 {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .tagline {
+            font-size: 18px;
+            color: #888;
+            margin-bottom: 24px;
+        }
+
+        .feature-badges {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .feature-badge {
+            background: rgba(102, 126, 234, 0.15);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            color: #a0b0e0;
+        }
+
+        h2 {
+            font-size: 22px;
+            font-weight: 600;
+            color: #667eea;
+            margin-top: 48px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid rgba(102, 126, 234, 0.2);
+        }
+
+        h3 {
+            font-size: 16px;
+            font-weight: 600;
+            color: #e0e0e0;
+            margin-top: 24px;
+            margin-bottom: 12px;
+        }
+
+        p,
+        li {
+            color: #b0b0b0;
+            margin-bottom: 10px;
+        }
+
+        ul {
+            padding-left: 24px;
+            margin-bottom: 16px;
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            padding: 28px;
+            margin-bottom: 24px;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #e0e0e0;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .shortcut {
+            display: inline-block;
+            background: rgba(102, 126, 234, 0.2);
+            border: 1px solid rgba(102, 126, 234, 0.3);
+            border-radius: 6px;
+            padding: 2px 10px;
+            font-family: 'JetBrains Mono', 'Consolas', monospace;
+            font-size: 13px;
+            color: #667eea;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-request {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10B981;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+        }
+
+        .badge-response {
+            background: rgba(59, 130, 246, 0.2);
+            color: #3B82F6;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+
+        .badge-mock {
+            background: rgba(245, 158, 11, 0.2);
+            color: #F59E0B;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+
+        .badge-both {
+            background: rgba(139, 92, 246, 0.2);
+            color: #8B5CF6;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+        }
+
+        .steps {
+            counter-reset: step;
+        }
+
+        .step {
+            position: relative;
+            padding-left: 48px;
+            margin-bottom: 20px;
+            padding-bottom: 20px;
+            border-left: 2px solid rgba(102, 126, 234, 0.3);
+            margin-left: 14px;
+        }
+
+        .step:last-child {
+            border-left: none;
+            padding-bottom: 0;
+        }
+
+        .step::before {
+            counter-increment: step;
+            content: counter(step);
+            position: absolute;
+            left: -15px;
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 14px;
+            color: white;
+        }
+
+        .step-title {
+            font-weight: 600;
+            color: #e0e0e0;
+            margin-bottom: 4px;
+        }
+
+        .step-desc {
+            color: #888;
+            font-size: 14px;
+        }
+
+        .tip {
+            background: rgba(16, 185, 129, 0.08);
+            border-left: 4px solid #10B981;
+            padding: 16px 20px;
+            border-radius: 0 12px 12px 0;
+            margin: 20px 0;
+        }
+
+        .tip-title {
+            color: #10B981;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .warning {
+            background: rgba(245, 158, 11, 0.08);
+            border-left: 4px solid #F59E0B;
+            padding: 16px 20px;
+            border-radius: 0 12px 12px 0;
+            margin: 20px 0;
+        }
+
+        .warning-title {
+            color: #F59E0B;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .info {
+            background: rgba(59, 130, 246, 0.08);
+            border-left: 4px solid #3B82F6;
+            padding: 16px 20px;
+            border-radius: 0 12px 12px 0;
+            margin: 20px 0;
+        }
+
+        .info-title {
+            color: #3B82F6;
+            font-weight: 600;
+            margin-bottom: 6px;
+        }
+
+        .use-case {
+            background: rgba(139, 92, 246, 0.08);
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 16px 0;
+        }
+
+        .use-case-title {
+            color: #8B5CF6;
+            font-weight: 600;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .action-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-top: 16px;
+        }
+
+        .action-item {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+        }
+
+        .action-icon {
+            font-size: 28px;
+            margin-bottom: 8px;
+        }
+
+        .action-name {
+            font-weight: 600;
+            color: #e0e0e0;
+            margin-bottom: 4px;
+        }
+
+        .action-desc {
+            font-size: 13px;
+            color: #888;
+        }
+
+        .faq-item {
+            margin-bottom: 20px;
+        }
+
+        .faq-q {
+            font-weight: 600;
+            color: #e0e0e0;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+        }
+
+        .faq-q::before {
+            content: "Q";
+            background: #667eea;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            flex-shrink: 0;
+        }
+
+        .faq-a {
+            padding-left: 34px;
+            color: #888;
+        }
+
+        .footer {
+            text-align: center;
+            margin-top: 64px;
+            padding-top: 32px;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            color: #666;
+        }
+
+        .toc {
+            background: rgba(102, 126, 234, 0.05);
+            border: 1px solid rgba(102, 126, 234, 0.15);
+            border-radius: 12px;
+            padding: 20px 24px;
+            margin-bottom: 32px;
+        }
+
+        .toc-title {
+            font-weight: 600;
+            color: #667eea;
+            margin-bottom: 12px;
+        }
+
+        .toc-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 8px;
+            list-style: none;
+            padding: 0;
+        }
+
+        .toc-list a {
+            color: #888;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .toc-list a:hover {
+            color: #667eea;
+        }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 28px;
+            }
+
+            .header {
+                padding: 24px 16px;
+            }
+
+            .card {
+                padding: 20px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">🔍</div>
+            <h1>NetSpy</h1>
+            <p class="tagline">Powerful Network Request Interceptor for Chrome DevTools</p>
+            <div class="feature-badges">
+                <span class="feature-badge">🔄 Request Interception</span>
+                <span class="feature-badge">📝 Response Modification</span>
+                <span class="feature-badge">🎭 Mock Data</span>
+                <span class="feature-badge">📊 Request Analysis</span>
+                <span class="feature-badge">🚀 Zero Config</span>
+            </div>
+        </div>
+
+        <!-- TOC -->
+        <div class="toc">
+            <div class="toc-title">📑 Table of Contents</div>
+            <ul class="toc-list">
+                <li><a href="#what-is">What is NetSpy?</a></li>
+                <li><a href="#getting-started">Getting Started</a></li>
+                <li><a href="#modes">Interception Modes</a></li>
+                <li><a href="#use-cases">Use Cases</a></li>
+                <li><a href="#actions">Actions</a></li>
+                <li><a href="#features">Features</a></li>
+                <li><a href="#tips">Tips & Tricks</a></li>
+                <li><a href="#faq">FAQ</a></li>
+            </ul>
+        </div>
+
+        <!-- What is NetSpy -->
+        <h2 id="what-is">🤔 What is NetSpy?</h2>
+        <div class="card">
+            <p>NetSpy is a <strong>Chrome DevTools extension</strong> designed for frontend developers, providing
+                powerful network request interception, modification, and debugging capabilities.</p>
+
+            <h3>Core Capabilities</h3>
+            <ul>
+                <li><strong>Real-time Interception</strong>: Pause requests before sending or responses before returning
+                    to the page</li>
+                <li><strong>Request Modification</strong>: Modify URL, Headers, Body and resend</li>
+                <li><strong>Response Modification</strong>: Change status code, headers, and body before page receives
+                    it</li>
+                <li><strong>Mock Data</strong>: Return custom mock responses without backend involvement</li>
+                <li><strong>Request Replay</strong>: Resend any request with one click for easy debugging</li>
+            </ul>
+
+            <h3>How is it Different from Chrome Network Panel?</h3>
+            <ul>
+                <li>Chrome Network can only <strong>view</strong> requests; NetSpy can <strong>intercept and
+                        modify</strong></li>
+                <li>Chrome Network cannot mock responses; NetSpy can return any custom data</li>
+                <li>NetSpy provides a friendlier editing interface with JSON formatting, syntax highlighting, etc.</li>
+            </ul>
+        </div>
+
+        <!-- Getting Started -->
+        <h2 id="getting-started">🚀 Getting Started</h2>
+        <div class="card">
+            <div class="steps">
+                <div class="step">
+                    <div class="step-title">Open Chrome DevTools</div>
+                    <div class="step-desc">Press <span class="shortcut">F12</span> or right-click the page and select
+                        "Inspect"</div>
+                </div>
+                <div class="step">
+                    <div class="step-title">Find the NetSpy Panel</div>
+                    <div class="step-desc">Look for the <strong>NetSpy</strong> tab in the DevTools top tab bar and
+                        click it</div>
+                </div>
+                <div class="step">
+                    <div class="step-title">Enable Interception</div>
+                    <div class="step-desc">Toggle the <strong>Intercept</strong> switch and select a mode
+                        (Request/Response/Both)</div>
+                </div>
+                <div class="step">
+                    <div class="step-title">Set URL Pattern</div>
+                    <div class="step-desc">Enter a URL pattern like <span class="shortcut">*</span> (all) or <span
+                            class="shortcut">*/api/*</span> (API only)</div>
+                </div>
+                <div class="step">
+                    <div class="step-title">Trigger Requests</div>
+                    <div class="step-desc">Refresh the page or interact to trigger network requests; matching ones will
+                        be paused</div>
+                </div>
+                <div class="step">
+                    <div class="step-title">Handle Paused Requests</div>
+                    <div class="step-desc">Click Edit, Mock, Continue, or Drop to handle the paused request</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Modes -->
+        <h2 id="modes">🎯 Interception Modes</h2>
+
+        <div class="card">
+            <div class="card-title"><span class="badge badge-request">Request</span> Request Mode</div>
+            <p>Pauses requests <strong>before they're sent to the server</strong>. Use cases:</p>
+            <ul>
+                <li>Modify request parameters (URL, Query, Headers, Body)</li>
+                <li>Test how different request data affects the backend</li>
+                <li>Block certain requests from sending (Drop)</li>
+                <li>Return mock data without hitting the real backend</li>
+            </ul>
+
+            <div class="tip">
+                <div class="tip-title">💡 Tip</div>
+                In this mode, you can use the <strong>Mock</strong> feature to return custom responses without actually
+                sending the request.
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title"><span class="badge badge-response">Response</span> Response Mode</div>
+            <p>Pauses responses <strong>before they reach the page</strong>. Use cases:</p>
+            <ul>
+                <li>Modify data returned by the backend (status code, headers, body)</li>
+                <li>Simulate error scenarios (500, 404, timeout, etc.)</li>
+                <li>Test frontend handling of different response data</li>
+                <li>Temporarily modify API responses without changing backend code</li>
+            </ul>
+
+            <div class="info">
+                <div class="info-title">ℹ️ Note</div>
+                Response interception lets the request send normally, then pauses when the backend responds so you can
+                modify it.
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-title"><span class="badge badge-both">Both</span> Both Mode</div>
+            <p>Intercept both requests and responses for <strong>complete control</strong>:</p>
+            <ul>
+                <li>Modify request parameters first, then modify the response after it returns</li>
+                <li>Ideal for scenarios requiring full control over the request-response cycle</li>
+                <li>Note: Each request will pause twice (request phase + response phase)</li>
+            </ul>
+        </div>
+
+        <!-- Use Cases -->
+        <h2 id="use-cases">💼 Use Cases</h2>
+
+        <div class="use-case">
+            <div class="use-case-title">🐛 Scenario 1: Debug API Request Parameters</div>
+            <p>Frontend API call fails, but not sure if it's a parameter issue or backend issue?</p>
+            <ol>
+                <li>Enable <span class="badge badge-request">Request</span> mode</li>
+                <li>When paused, click <strong>Edit</strong> to modify request parameters</li>
+                <li>Click <strong>Send</strong> and observe the response</li>
+                <li>Quickly identify the issue without changing code or recompiling</li>
+            </ol>
+        </div>
+
+        <div class="use-case">
+            <div class="use-case-title">🎭 Scenario 2: Mock Backend API</div>
+            <p>Backend API not ready yet, but frontend needs to develop?</p>
+            <ol>
+                <li>Enable <span class="badge badge-request">Request</span> mode</li>
+                <li>When paused, click <strong>Mock</strong></li>
+                <li>Enter your custom JSON response data</li>
+                <li>Click <strong>Mock Response</strong> - the page receives your defined data</li>
+            </ol>
+        </div>
+
+        <div class="use-case">
+            <div class="use-case-title">⚠️ Scenario 3: Test Error Handling</div>
+            <p>Need to test frontend handling of 500 errors, network timeouts, etc.?</p>
+            <ol>
+                <li>Enable <span class="badge badge-response">Response</span> mode</li>
+                <li>When paused, click <strong>Edit</strong></li>
+                <li>Change Status Code to 500 or other error codes</li>
+                <li>Click <strong>Send</strong> to verify frontend error handling logic</li>
+            </ol>
+        </div>
+
+        <div class="use-case">
+            <div class="use-case-title">📝 Scenario 4: Temporarily Modify Response Data</div>
+            <p>Need to show more list items to test pagination or infinite scroll?</p>
+            <ol>
+                <li>Enable <span class="badge badge-response">Response</span> mode</li>
+                <li>Pause the list API and click <strong>Edit</strong></li>
+                <li>Modify the JSON total count or add more data items</li>
+                <li>Click <strong>Send</strong> - page immediately displays modified data</li>
+            </ol>
+        </div>
+
+        <!-- Actions -->
+        <h2 id="actions">⚡ Actions</h2>
+        <div class="action-grid">
+            <div class="action-item">
+                <div class="action-icon">✏️</div>
+                <div class="action-name">Edit</div>
+                <div class="action-desc">Open editor to modify request or response content, then send</div>
+            </div>
+            <div class="action-item">
+                <div class="action-icon">🎭</div>
+                <div class="action-name">Mock</div>
+                <div class="action-desc">Return custom response without sending real request</div>
+            </div>
+            <div class="action-item">
+                <div class="action-icon">▶️</div>
+                <div class="action-name">Continue</div>
+                <div class="action-desc">Let request proceed without any modifications</div>
+            </div>
+            <div class="action-item">
+                <div class="action-icon">🚫</div>
+                <div class="action-name">Drop</div>
+                <div class="action-desc">Cancel the request entirely, simulating network error</div>
+            </div>
+        </div>
+
+        <!-- Features -->
+        <h2 id="features">✨ Features</h2>
+        <div class="card">
+            <h3>📊 Request List</h3>
+            <ul>
+                <li><strong>Real-time Capture</strong>: Automatically records all network requests from the page</li>
+                <li><strong>Type Filtering</strong>: Filter by API, JSON, JS, CSS, Image, etc.</li>
+                <li><strong>Keyword Search</strong>: Search by URL, method, status code</li>
+                <li><strong>Domain Grouping</strong>: Group requests by domain</li>
+            </ul>
+
+            <h3>📝 Request Editor</h3>
+            <ul>
+                <li><strong>Visual Editing</strong>: Table-based editing for Query params, Headers, Body</li>
+                <li><strong>JSON Formatting</strong>: Auto-beautify JSON with syntax highlighting</li>
+                <li><strong>Multiple Body Types</strong>: JSON, Form-data, x-www-form-urlencoded, Raw</li>
+            </ul>
+
+            <h3>👁 Response Preview</h3>
+            <ul>
+                <li><strong>JSON Tree View</strong>: Collapsible tree with search and copy</li>
+                <li><strong>Image/Video Preview</strong>: Preview media files directly in the panel</li>
+                <li><strong>HTML Preview</strong>: Toggle between source code and rendered preview</li>
+            </ul>
+
+            <h3>🔄 Request Replay</h3>
+            <ul>
+                <li><strong>One-click Resend</strong>: Click Send button to resend the request</li>
+                <li><strong>Modify and Resend</strong>: Change any parameters before sending for debugging</li>
+            </ul>
+        </div>
+
+        <!-- Tips -->
+        <h2 id="tips">💡 Tips & Tricks</h2>
+
+        <div class="tip">
+            <div class="tip-title">URL Pattern Matching</div>
+            <ul>
+                <li><span class="shortcut">*</span> - Intercept all requests</li>
+                <li><span class="shortcut">*/api/*</span> - Only intercept requests containing /api/</li>
+                <li><span class="shortcut">*.json</span> - Only intercept JSON files</li>
+                <li><span class="shortcut">example.com/*</span> - Only intercept specific domain</li>
+            </ul>
+        </div>
+
+        <div class="tip">
+            <div class="tip-title">JSON Editor Shortcuts</div>
+            <ul>
+                <li>Click <strong>Format</strong> button to beautify JSON</li>
+                <li>Click <strong>Minify</strong> button to compress JSON</li>
+                <li>Editor automatically detects JSON syntax errors</li>
+            </ul>
+        </div>
+
+        <div class="tip">
+            <div class="tip-title">Preserve Log</div>
+            <p>Check <strong>Preserve log</strong> to keep request records after page navigation</p>
+        </div>
+
+        <div class="warning">
+            <div class="warning-title">⚠️ Important Notes</div>
+            <ul>
+                <li>Interception uses Chrome Debugger API; a debug banner appears at the top of the browser when enabled
+                </li>
+                <li>Close DevTools or toggle the Intercept switch off to disable debug mode</li>
+                <li>After updating the extension, close and reopen DevTools</li>
+            </ul>
+        </div>
+
+        <!-- FAQ -->
+        <h2 id="faq">❓ FAQ</h2>
+        <div class="card">
+            <div class="faq-item">
+                <div class="faq-q">Why is there a yellow bar at the top of the browser when interception is enabled?
+                </div>
+                <div class="faq-a">This is Chrome's security notice indicating the page is being debugged. This is
+                    normal behavior and the bar disappears when interception is disabled.</div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-q">Why are some requests not being intercepted?</div>
+                <div class="faq-a">Check: 1) Is the Intercept toggle on? 2) Is the URL pattern correct? 3) Was the
+                    request made after enabling interception?</div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-q">The page is stuck after intercepting a request. What do I do?</div>
+                <div class="faq-a">Paused requests must be handled manually (Continue/Drop/Mock). If there are multiple
+                    paused requests, click "Continue All" in the toolbar to release all at once.</div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-q">Can mock data be persisted?</div>
+                <div class="faq-a">The current version uses one-time mocking that requires manual operation each time.
+                    Persistent mock rules are planned for future versions.</div>
+            </div>
+
+            <div class="faq-item">
+                <div class="faq-q">Does it support WebSocket interception?</div>
+                <div class="faq-a">The current version primarily supports HTTP/HTTPS requests. WebSocket support is
+                    planned for future releases.</div>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>NetSpy v1.3.0 | Made with ❤️ for developers</p>
+            <p style="margin-top: 8px; font-size: 13px;">
+                Feedback and suggestions are welcome
+            </p>
+        </div>
+    </div>
+</body>
+
+</html>

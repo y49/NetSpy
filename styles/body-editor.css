@@ -1,0 +1,132 @@
+/* styles/body-editor.css - Body Editor */
+
+/* ==========================================
+   Body Editor (Postman Style)
+   ========================================== */
+
+.body-editor {
+  background: var(--bg-primary);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.body-type-selector {
+  display: flex;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md) var(--spacing-lg);
+  background: var(--bg-tertiary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.body-type {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-md);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.body-type:hover {
+  color: var(--text-primary);
+}
+
+.body-type.active {
+  background: var(--accent-primary);
+  color: white;
+}
+
+.body-type input {
+  display: none;
+}
+
+.body-empty {
+  padding: var(--spacing-xl);
+  text-align: center;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.code-editor {
+  min-height: 150px;
+  max-height: 300px;
+  overflow: auto;
+}
+
+.code-content {
+  padding: var(--spacing-lg);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+
+/* Response time and size badges */
+.response-time,
+.response-size {
+  font-size: 11px;
+  color: var(--text-muted);
+  padding: 2px 8px;
+  background: var(--bg-hover);
+  border-radius: var(--radius-sm);
+  margin-left: var(--spacing-sm);
+}
+
+
+/* Body Editor Enhancements */
+
+/* ==========================================
+   Body Editor Enhancements
+   ========================================== */
+
+.body-content-area {
+  padding: var(--spacing-md);
+}
+
+.body-textarea-wrapper {
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.body-textarea {
+  width: 100%;
+  min-height: 200px;
+  padding: var(--spacing-md);
+  border: none;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.6;
+  resize: vertical;
+}
+
+.body-textarea:focus {
+  outline: none;
+}
+
+.body-textarea.json {
+  color: var(--accent-primary);
+}
+
+.body-add-btn {
+  margin-top: var(--spacing-md);
+  width: 100%;
+}
+
+/* KV Table in Body */
+.body-content-area .kv-table {
+  margin-bottom: 0;
+}
+
+/* Readonly table */
+.kv-table.readonly .kv-row:hover {
+  background: transparent;
+}
+

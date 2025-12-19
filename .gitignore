@@ -1,0 +1,51 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Logs
+*.log
+npm-debug.log*
+
+# Environment
+.env
+.env.local
+
+# Package lock (optional - uncomment if you don't want to track)
+# package-lock.json
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Chrome extension unpacked testing
+*.crx
+*.pem
+
+# Coverage
+coverage/
+
+# Artifacts
+.gemini/
+docs/superpowers/
+
+# Build artifacts
+*.zip
+NetSpy-*/
+
+# Worktrees
+.worktrees/
