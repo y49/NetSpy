@@ -750,17 +750,13 @@ async function sendRequest() {
                 requestBody = values.body;
                 break;
             case 'formdata':
-                if (values.bodyModified) {
+                if (values.bodyModified && values.bodyBoundary) {
                     // Body was rebuilt with new boundary
-                    if (values.bodyBoundary) {
-                        contentType = `multipart/form-data; boundary=${values.bodyBoundary}`;
-                    }
-                    requestBody = values.body;
-                } else {
-                    // Body not modified — don't set contentType, keep original
-                    // Content-Type header with original boundary intact
-                    requestBody = values.body;
+                    contentType = `multipart/form-data; boundary=${values.bodyBoundary}`;
                 }
+                // If not modified: contentType stays null, original Content-Type
+                // header with original boundary is preserved in headersArray
+                requestBody = values.body;
                 break;
             case 'raw':
                 requestBody = values.body;
@@ -903,15 +899,16 @@ async function sendRequest() {
                 const maxRetries = 3;
 
                 while (retryCount < maxRetries) {
+                    // Filter out Content-Length — Chrome/debugger recalculates it
+                    const interceptHeaders = headersArray.filter(
+                        h => h.name.toLowerCase() !== 'content-length'
+                    );
                     const modifications = {
                         url: values.url,
                         method: values.method,
-                        headers: headersArray,
+                        headers: interceptHeaders,
                     };
-                    // Only send postData if body was actually modified.
-                    // For unmodified formdata, Chrome preserves the original
-                    // binary body — re-sending it would corrupt file uploads.
-                    if (values.bodyModified && requestBody !== undefined) {
+                    if (requestBody !== undefined) {
                         modifications.postData = requestBody;
                     }
 
