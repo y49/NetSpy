@@ -28,9 +28,15 @@ export class KeyValueEditor {
                 value: 'Value',
                 description: 'Description'
             },
+            valueAsTextarea: false,    // 使用 textarea 替代 input
+            itemTypes: ['text'],       // 支持的项目类型
             emptyMessage: 'No items yet. Click "Add" to create one.',
             ...options
         };
+
+        if (this.options.itemTypes.includes('file')) {
+            this.options.showBulkEdit = false;
+        }
 
         this.items = [];
         this.onChangeCallbacks = [];
@@ -47,7 +53,10 @@ export class KeyValueEditor {
             name: item.name || item.key || '',
             value: item.value || '',
             enabled: item.enabled !== false,
-            description: item.description || ''
+            description: item.description || '',
+            type: item.type || 'text',
+            fileName: item.fileName || '',
+            fileSize: item.fileSize || 0,
         }));
         this.renderItems();
     }
@@ -60,7 +69,10 @@ export class KeyValueEditor {
             name: item.name,
             value: item.value,
             enabled: item.enabled,
-            description: item.description
+            description: item.description,
+            type: item.type,
+            fileName: item.fileName,
+            fileSize: item.fileSize,
         }));
     }
 
@@ -160,7 +172,7 @@ export class KeyValueEditor {
 
         if (this.items.length === 0 && !this.options.readOnly) {
             // 空状态 - 直接添加一个空行
-            this.items.push({ name: '', value: '', enabled: true, description: '' });
+            this.items.push({ name: '', value: '', enabled: true, description: '', type: 'text', fileName: '', fileSize: 0 });
         }
 
         // 表格
@@ -217,7 +229,9 @@ export class KeyValueEditor {
             tr.classList.add('disabled');
         }
 
-        // 复选框
+        const isFile = item.type === 'file';
+
+        // Checkbox
         if (this.options.showCheckbox) {
             const tdCheck = document.createElement('td');
             tdCheck.className = 'kv-col-check';
@@ -235,7 +249,7 @@ export class KeyValueEditor {
             tr.appendChild(tdCheck);
         }
 
-        // Key 输入框
+        // Key input
         const tdKey = document.createElement('td');
         tdKey.className = 'kv-col-key';
         const keyInput = document.createElement('input');
@@ -243,14 +257,14 @@ export class KeyValueEditor {
         keyInput.className = 'kv-input';
         keyInput.value = item.name;
         keyInput.placeholder = this.options.placeholder.key;
-        keyInput.readOnly = this.options.readOnly;
+        keyInput.readOnly = this.options.readOnly || isFile;
         keyInput.addEventListener('input', (e) => {
             this.items[index].name = e.target.value;
             this._triggerChange();
         });
         keyInput.addEventListener('keydown', (e) => {
             if (e.key === 'Tab' && !e.shiftKey && !item.name && !item.value) {
-                // 最后一行空行，Tab 到 value
+                // Last empty row, Tab to value
             } else if (e.key === 'Enter') {
                 this.addItem();
             }
@@ -259,29 +273,68 @@ export class KeyValueEditor {
         tdKey.appendChild(keyInput);
         tr.appendChild(tdKey);
 
-        // Value 输入框
+        // Value column
         const tdValue = document.createElement('td');
         tdValue.className = 'kv-col-value';
-        const valueInput = document.createElement('input');
-        valueInput.type = 'text';
-        valueInput.className = 'kv-input';
-        valueInput.value = item.value;
-        valueInput.placeholder = this.options.placeholder.value;
-        valueInput.readOnly = this.options.readOnly;
-        valueInput.addEventListener('input', (e) => {
-            this.items[index].value = e.target.value;
-            this._triggerChange();
-        });
-        valueInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') {
-                this.addItem();
-            }
-        });
-        this._highlightVariables(valueInput);
-        tdValue.appendChild(valueInput);
+
+        if (isFile) {
+            // File field: read-only label
+            const fileLabel = document.createElement('span');
+            fileLabel.className = 'kv-file-label';
+            const sizeText = item.fileSize > 0 ? ` (${this._formatFileSize(item.fileSize)})` : ' (binary)';
+            fileLabel.textContent = `\u{1F4CE} ${item.fileName || 'unknown'}${sizeText}`;
+            tdValue.appendChild(fileLabel);
+        } else if (this.options.valueAsTextarea) {
+            // Textarea for long values
+            const valueTextarea = document.createElement('textarea');
+            valueTextarea.className = 'kv-input kv-textarea';
+            valueTextarea.value = item.value;
+            valueTextarea.placeholder = this.options.placeholder.value;
+            valueTextarea.readOnly = this.options.readOnly;
+            valueTextarea.rows = 1;
+            // Auto-expand
+            const autoResize = () => {
+                valueTextarea.style.height = 'auto';
+                valueTextarea.style.height = valueTextarea.scrollHeight + 'px';
+            };
+            valueTextarea.addEventListener('input', (e) => {
+                this.items[index].value = e.target.value;
+                this._triggerChange();
+                autoResize();
+            });
+            valueTextarea.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    this.addItem();
+                }
+            });
+            this._highlightVariables(valueTextarea);
+            tdValue.appendChild(valueTextarea);
+            // Initial resize after DOM attachment
+            requestAnimationFrame(autoResize);
+        } else {
+            // Standard input
+            const valueInput = document.createElement('input');
+            valueInput.type = 'text';
+            valueInput.className = 'kv-input';
+            valueInput.value = item.value;
+            valueInput.placeholder = this.options.placeholder.value;
+            valueInput.readOnly = this.options.readOnly;
+            valueInput.addEventListener('input', (e) => {
+                this.items[index].value = e.target.value;
+                this._triggerChange();
+            });
+            valueInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    this.addItem();
+                }
+            });
+            this._highlightVariables(valueInput);
+            tdValue.appendChild(valueInput);
+        }
         tr.appendChild(tdValue);
 
-        // Description 输入框
+        // Description input
         if (this.options.showDescription) {
             const tdDesc = document.createElement('td');
             tdDesc.className = 'kv-col-desc';
@@ -299,13 +352,13 @@ export class KeyValueEditor {
             tr.appendChild(tdDesc);
         }
 
-        // 删除按钮
+        // Delete button
         if (!this.options.readOnly) {
             const tdActions = document.createElement('td');
             tdActions.className = 'kv-col-actions';
             const removeBtn = document.createElement('button');
             removeBtn.className = 'kv-remove';
-            removeBtn.innerHTML = '×';
+            removeBtn.innerHTML = '&times;';
             removeBtn.title = 'Remove';
             removeBtn.addEventListener('click', () => this.removeItem(index));
             tdActions.appendChild(removeBtn);
@@ -332,10 +385,20 @@ export class KeyValueEditor {
     }
 
     /**
+     * Format file size for display
+     */
+    _formatFileSize(bytes) {
+        if (bytes === 0) return '0 B';
+        const units = ['B', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(1024));
+        return (bytes / Math.pow(1024, i)).toFixed(i > 0 ? 1 : 0) + ' ' + units[i];
+    }
+
+    /**
      * 添加项目
      */
     addItem(item = null) {
-        this.items.push(item || { name: '', value: '', enabled: true, description: '' });
+        this.items.push(item || { name: '', value: '', enabled: true, description: '', type: 'text', fileName: '', fileSize: 0 });
         this.renderItems();
 
         // 聚焦到新行的 key 输入框
@@ -390,13 +453,16 @@ export class KeyValueEditor {
         this.items = lines.map(line => {
             const colonIndex = line.indexOf(':');
             if (colonIndex === -1) {
-                return { name: line.trim(), value: '', enabled: true, description: '' };
+                return { name: line.trim(), value: '', enabled: true, description: '', type: 'text', fileName: '', fileSize: 0 };
             }
             return {
                 name: line.substring(0, colonIndex).trim(),
                 value: line.substring(colonIndex + 1).trim(),
                 enabled: true,
-                description: ''
+                description: '',
+                type: 'text',
+                fileName: '',
+                fileSize: 0
             };
         });
 
@@ -414,13 +480,16 @@ export class KeyValueEditor {
         this.items = lines.map(line => {
             const sepIndex = line.indexOf(kvSeparator);
             if (sepIndex === -1) {
-                return { name: line.trim(), value: '', enabled: true, description: '' };
+                return { name: line.trim(), value: '', enabled: true, description: '', type: 'text', fileName: '', fileSize: 0 };
             }
             return {
                 name: line.substring(0, sepIndex).trim(),
                 value: line.substring(sepIndex + 1).trim(),
                 enabled: true,
-                description: ''
+                description: '',
+                type: 'text',
+                fileName: '',
+                fileSize: 0
             };
         });
 
@@ -452,6 +521,7 @@ export class KeyValueEditor {
      */
     destroy() {
         this.container.innerHTML = '';
+        this.container.className = '';
         this.onChangeCallbacks = [];
     }
 }
