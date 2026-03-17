@@ -747,20 +747,15 @@ async function sendRequest() {
                 break;
             case 'urlencoded':
                 contentType = 'application/x-www-form-urlencoded';
-                // Build from pairs if available
-                if (values.bodyPairs && values.bodyPairs.length > 0) {
-                    requestBody = values.bodyPairs
-                        .map(p => `${encodeURIComponent(p.name)}=${encodeURIComponent(p.value)}`)
-                        .join('&');
-                } else {
-                    requestBody = values.body;
-                }
+                requestBody = values.body;
                 break;
             case 'formdata':
-                // For form-data, we send as special type that background will handle
-                contentType = 'multipart/form-data';
-                // Send pairs for background to construct FormData
-                requestBody = { type: 'formdata', pairs: values.bodyPairs || [] };
+                if (values.bodyBoundary) {
+                    contentType = `multipart/form-data; boundary=${values.bodyBoundary}`;
+                } else {
+                    contentType = 'multipart/form-data';
+                }
+                requestBody = values.body;
                 break;
             case 'raw':
                 requestBody = values.body;
@@ -770,8 +765,8 @@ async function sendRequest() {
                 break;
         }
 
-        // Set content-type if not formdata (browser sets it with boundary)
-        if (contentType && contentType !== 'multipart/form-data') {
+        // Set content-type header
+        if (contentType) {
             headersObject['Content-Type'] = contentType;
         }
 
@@ -945,7 +940,7 @@ async function sendRequest() {
                         url: values.url,
                         method: values.method,
                         headers: headersArray,
-                        body: typeof requestBody === 'string' ? requestBody : JSON.stringify(values.bodyPairs),
+                        body: requestBody || '',
                         timestamp: Date.now()
                     });
 
