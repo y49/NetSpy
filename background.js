@@ -893,14 +893,29 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
                         // Handle different body types
                         if (requestData.body && requestData.method !== 'GET' && requestData.method !== 'HEAD') {
-                            if (requestData.bodyType === 'formdata' && requestData.body.type === 'formdata') {
-                                // Build FormData from pairs
+                            if (requestData.bodyType === 'formdata' && requestData.bodyPairs) {
+                                // Build FormData from pairs — browser handles
+                                // Content-Type + boundary automatically
                                 const formData = new FormData();
-                                (requestData.body.pairs || []).forEach(pair => {
-                                    formData.append(pair.name, pair.value);
-                                });
+                                for (const pair of requestData.bodyPairs) {
+                                    if (pair.type === 'file' && pair.value) {
+                                        // Create a Blob for file fields to preserve content type
+                                        const blob = new Blob([pair.value], {
+                                            type: pair.contentType || 'application/octet-stream'
+                                        });
+                                        formData.append(pair.name, blob, pair.fileName || 'file');
+                                    } else {
+                                        formData.append(pair.name, pair.value);
+                                    }
+                                }
                                 fetchOptions.body = formData;
-                                // Don't set headers - browser will set content-type with boundary
+                                // Don't set Content-Type — browser sets it with boundary
+                                const headers = filterValidHeaders(requestData.headers);
+                                delete headers['Content-Type'];
+                                delete headers['content-type'];
+                                delete headers['Content-Length'];
+                                delete headers['content-length'];
+                                fetchOptions.headers = headers;
                             } else {
                                 // Use body as-is for other types
                                 fetchOptions.body = requestData.body;

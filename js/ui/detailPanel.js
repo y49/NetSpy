@@ -305,6 +305,7 @@ export function getValues() {
         body: bodyResult.body,
         bodyType: currentBodyType,
         bodyBoundary: bodyResult.boundary,
+        bodyPairs: bodyResult.pairs || null,
         bodyModified: bodyModified,
         isInterceptEdit: isInterceptEditMode,
         interceptRequestId: interceptRequestId,
@@ -521,9 +522,11 @@ function buildMultipartBody(pairs) {
 function getBodyForSend() {
     switch (currentBodyType) {
         case 'formdata': {
-            if (!bodyEditor) return { body: editableBody, boundary: null };
+            if (!bodyEditor) return { body: editableBody, boundary: null, pairs: null };
             const pairs = bodyEditor.getData().filter(p => p.enabled);
-            return buildMultipartBody(pairs);
+            const result = buildMultipartBody(pairs);
+            result.pairs = pairs; // Also pass pairs for FormData API in replay
+            return result;
         }
         case 'urlencoded': {
             if (!bodyEditor) return { body: '', boundary: null };

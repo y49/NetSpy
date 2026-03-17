@@ -1026,15 +1026,26 @@ async function sendRequest() {
 
         } else {
             // Normal send request
+            const sendData = {
+                url: values.url,
+                method: values.method,
+                headers: headersObject,
+                body: requestBody,
+                bodyType: values.bodyType
+            };
+            // For formdata, send pairs so background can use FormData API
+            if (values.bodyType === 'formdata' && values.bodyPairs) {
+                sendData.bodyPairs = values.bodyPairs.map(p => ({
+                    name: p.name,
+                    value: p.value,
+                    type: p.type || 'text',
+                    fileName: p.fileName || '',
+                    contentType: p.contentType || '',
+                }));
+            }
             response = await chrome.runtime.sendMessage({
                 type: 'SEND_REQUEST',
-                data: {
-                    url: values.url,
-                    method: values.method,
-                    headers: headersObject,
-                    body: requestBody,
-                    bodyType: values.bodyType
-                }
+                data: sendData
             });
 
             console.log('Response received:', response);
