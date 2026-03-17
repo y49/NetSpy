@@ -750,12 +750,16 @@ async function sendRequest() {
                 requestBody = values.body;
                 break;
             case 'formdata':
-                if (values.bodyBoundary) {
-                    contentType = `multipart/form-data; boundary=${values.bodyBoundary}`;
-                } else {
-                    contentType = 'multipart/form-data';
+                if (values.bodyModified) {
+                    // Body was rebuilt — use new boundary
+                    if (values.bodyBoundary) {
+                        contentType = `multipart/form-data; boundary=${values.bodyBoundary}`;
+                    } else {
+                        contentType = 'multipart/form-data';
+                    }
+                    requestBody = values.body;
                 }
-                requestBody = values.body;
+                // If not modified, keep original Content-Type header (with original boundary)
                 break;
             case 'raw':
                 requestBody = values.body;
@@ -898,16 +902,22 @@ async function sendRequest() {
                 const maxRetries = 3;
 
                 while (retryCount < maxRetries) {
+                    // If body was not modified, don't send postData — let Chrome
+                    // use the original binary body (avoids corrupting file uploads)
+                    const modifications = {
+                        url: values.url,
+                        method: values.method,
+                        headers: headersArray,
+                    };
+                    if (values.bodyModified && requestBody !== undefined) {
+                        modifications.postData = requestBody;
+                    }
+
                     response = await chrome.runtime.sendMessage({
                         type: 'CONTINUE_REQUEST',
                         tabId: tabId,
                         requestId: requestIdToUse,
-                        modifications: {
-                            url: values.url,
-                            method: values.method,
-                            headers: headersArray,
-                            postData: requestBody
-                        }
+                        modifications
                     });
 
                     if (response?.success) {

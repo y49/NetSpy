@@ -30,6 +30,7 @@ let editableHeaders = [];
 let editableBody = '';          // Original body from captured request (for initial parse)
 let editableBodyRaw = '';       // For raw/json editing only
 let originalBodyType = 'none';  // Body type detected from original request Content-Type
+let bodyModified = false;       // Whether user has modified the body (for intercept passthrough)
 const bodyTypeCache = new Map(); // bodyType -> { pairs, raw }
 
 // Editor instances
@@ -265,6 +266,7 @@ function initEditableData() {
         currentBodyType = 'none';
     }
     originalBodyType = currentBodyType;
+    bodyModified = false;
 
     // Initialize response editable data (for response intercept)
     editableResponseStatus = currentRequest.status || 200;
@@ -303,6 +305,7 @@ export function getValues() {
         body: bodyResult.body,
         bodyType: currentBodyType,
         bodyBoundary: bodyResult.boundary,
+        bodyModified: bodyModified,
         isInterceptEdit: isInterceptEditMode,
         interceptRequestId: interceptRequestId,
         interceptStage: interceptStage,
@@ -568,6 +571,7 @@ function renderBody() {
     // Bind body type change
     container.querySelectorAll('input[name="bodyType"]').forEach(radio => {
         radio.addEventListener('change', (e) => {
+            bodyModified = true;
             // Cache current data before switching
             if (currentBodyType === 'formdata' || currentBodyType === 'urlencoded') {
                 if (bodyEditor) {
@@ -767,6 +771,7 @@ function bindBodyEvents(container) {
     if (textarea) {
         textarea.addEventListener('input', (e) => {
             editableBodyRaw = e.target.value;
+            bodyModified = true;
         });
     }
 }
@@ -784,6 +789,9 @@ function initBodyKvEditor(container) {
         showBulkEdit: currentBodyType !== 'formdata',
         valueAsTextarea: true,
         itemTypes: currentBodyType === 'formdata' ? ['text', 'file'] : ['text'],
+    });
+    bodyEditor.onChange(() => {
+        bodyModified = true;
     });
 
     // Load data: from cache first, then parse from original body only if types match
