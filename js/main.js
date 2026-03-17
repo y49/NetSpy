@@ -750,12 +750,17 @@ async function sendRequest() {
                 requestBody = values.body;
                 break;
             case 'formdata':
-                if (values.bodyBoundary) {
-                    contentType = `multipart/form-data; boundary=${values.bodyBoundary}`;
+                if (values.bodyModified) {
+                    // Body was rebuilt with new boundary
+                    if (values.bodyBoundary) {
+                        contentType = `multipart/form-data; boundary=${values.bodyBoundary}`;
+                    }
+                    requestBody = values.body;
                 } else {
-                    contentType = 'multipart/form-data';
+                    // Body not modified — don't set contentType, keep original
+                    // Content-Type header with original boundary intact
+                    requestBody = values.body;
                 }
-                requestBody = values.body;
                 break;
             case 'raw':
                 requestBody = values.body;
@@ -903,7 +908,10 @@ async function sendRequest() {
                         method: values.method,
                         headers: headersArray,
                     };
-                    if (requestBody !== undefined) {
+                    // Only send postData if body was actually modified.
+                    // For unmodified formdata, Chrome preserves the original
+                    // binary body — re-sending it would corrupt file uploads.
+                    if (values.bodyModified && requestBody !== undefined) {
                         modifications.postData = requestBody;
                     }
 
