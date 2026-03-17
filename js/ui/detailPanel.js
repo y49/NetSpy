@@ -29,6 +29,7 @@ let editableParams = [];
 let editableHeaders = [];
 let editableBody = '';          // Original body from captured request (for initial parse)
 let editableBodyRaw = '';       // For raw/json editing only
+let originalBodyType = 'none';  // Body type detected from original request Content-Type
 const bodyTypeCache = new Map(); // bodyType -> { pairs, raw }
 
 // Editor instances
@@ -263,6 +264,7 @@ function initEditableData() {
     } else {
         currentBodyType = 'none';
     }
+    originalBodyType = currentBodyType;
 
     // Initialize response editable data (for response intercept)
     editableResponseStatus = currentRequest.status || 200;
@@ -692,8 +694,7 @@ function parseFormDataBody(body) {
     }
 
     if (!boundary) {
-        // Fallback: try as urlencoded
-        return parseUrlEncodedBody(body);
+        return [];
     }
 
     const parts = body.split(boundary).filter(part => part.trim() && part.trim() !== '--');
@@ -779,16 +780,18 @@ function initBodyKvEditor(container) {
         itemTypes: currentBodyType === 'formdata' ? ['text', 'file'] : ['text'],
     });
 
-    // Load data: from cache first, then parse from original body
+    // Load data: from cache first, then parse from original body only if types match
     const cached = bodyTypeCache.get(currentBodyType);
     if (cached?.pairs?.length) {
         bodyEditor.setData(cached.pairs);
-    } else {
+    } else if (currentBodyType === originalBodyType) {
+        // Only parse original body if the type matches (don't parse JSON as form-data)
         const pairs = currentBodyType === 'formdata'
             ? parseFormDataBody(editableBody)
             : parseUrlEncodedBody(editableBody);
         bodyEditor.setData(pairs);
     }
+    // Otherwise: empty editor (user switched to a different KV type with no cached data)
 }
 
 // ==========================================
