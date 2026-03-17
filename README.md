@@ -51,7 +51,7 @@ Handle polling/repeated requests with configurable strategies:
 ### From Source / 从源码安装
 
 ```bash
-git clone https://github.com/user/NetSpy.git
+git clone https://github.com/y49/NetSpy.git
 cd NetSpy
 npm install
 npm run build
