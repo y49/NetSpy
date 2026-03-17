@@ -5,11 +5,15 @@
    ========================================== */
 
 .kv-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
   background: var(--bg-primary);
   border-radius: var(--radius-md);
   overflow: hidden;
 }
 
+/* Legacy header (used by read-only response headers view) */
 .kv-header {
   display: flex;
   justify-content: space-between;
@@ -42,13 +46,53 @@
   font-style: italic;
 }
 
+/* ==========================================
+   Toolbar (Bulk Edit button)
+   ========================================== */
+
+.kv-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  padding: 4px 8px;
+}
+
+.kv-bulk-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: transparent;
+  border: 1px solid var(--border-light);
+  border-radius: 4px;
+  font-size: 11px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.kv-bulk-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+/* ==========================================
+   Table
+   ========================================== */
+
+.kv-table-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 4px;
+}
+
 .kv-table {
   width: 100%;
   border-collapse: collapse;
 }
 
 .kv-table th {
-  padding: var(--spacing-sm) var(--spacing-md);
+  padding: 6px 8px;
   text-align: left;
   font-size: 11px;
   font-weight: 600;
@@ -68,26 +112,8 @@
 }
 
 .kv-row td {
-  padding: var(--spacing-xs) var(--spacing-md);
+  padding: var(--spacing-xs) var(--spacing-sm);
   border-bottom: 1px solid var(--border-color);
-}
-
-.kv-input {
-  width: 100%;
-  padding: var(--spacing-sm);
-  border: 1px solid transparent;
-  border-radius: var(--radius-sm);
-  background: transparent;
-  color: var(--text-primary);
-  font-family: var(--font-mono);
-  font-size: 12px;
-  transition: all var(--transition-fast);
-}
-
-.kv-input:focus {
-  background: var(--bg-secondary);
-  border-color: var(--accent-primary);
-  outline: none;
 }
 
 .kv-row.disabled {
@@ -98,24 +124,207 @@
   text-decoration: line-through;
 }
 
-/* File field label */
-.kv-file-label {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px 8px;
-    background: var(--bg-tertiary);
-    border-radius: var(--radius-sm);
-    font-size: 12px;
-    color: var(--text-secondary);
-    font-family: var(--font-mono);
+/* ==========================================
+   Column widths
+   ========================================== */
+
+.kv-col-check {
+  width: 28px;
+  text-align: center;
 }
 
-/* Textarea value (auto-expanding) */
+.kv-col-check input {
+  accent-color: var(--accent-primary);
+}
+
+.kv-col-key {
+  width: 30%;
+}
+
+.kv-col-value {
+  width: auto;
+}
+
+.kv-col-desc {
+  width: 20%;
+}
+
+.kv-col-actions {
+  width: 28px;
+  text-align: center;
+}
+
+/* ==========================================
+   Input fields
+   ========================================== */
+
+.kv-input {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  outline: none;
+  transition: all var(--transition-fast);
+}
+
+.kv-input:focus {
+  background: var(--bg-secondary);
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px rgba(124, 58, 237, 0.15);
+}
+
+.kv-input:read-only {
+  background: var(--bg-secondary);
+  cursor: default;
+}
+
+.kv-input.has-variable {
+  color: var(--warning);
+}
+
+/* ==========================================
+   Textarea value (auto-expanding)
+   ========================================== */
+
 .kv-textarea {
-    resize: none;
-    overflow: hidden;
-    min-height: 28px;
-    line-height: 1.4;
+  resize: none;
+  overflow: hidden;
+  min-height: 28px;
+  line-height: 1.4;
 }
 
+/* ==========================================
+   File field label
+   ========================================== */
+
+.kv-file-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  background: var(--bg-tertiary);
+  border-radius: var(--radius-sm);
+  font-size: 12px;
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+}
+
+/* ==========================================
+   Action buttons
+   ========================================== */
+
+.kv-remove {
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 16px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: var(--transition-fast);
+  opacity: 0;
+}
+
+.kv-row:hover .kv-remove {
+  opacity: 1;
+}
+
+.kv-remove:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: var(--error);
+}
+
+.kv-add {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  margin: 0 4px;
+  background: transparent;
+  border: 1px dashed var(--border-color);
+  border-radius: 6px;
+  color: var(--text-muted);
+  font-size: 12px;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.kv-add:hover {
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+  background: rgba(124, 58, 237, 0.05);
+}
+
+.kv-add-icon {
+  font-size: 16px;
+  font-weight: 300;
+}
+
+/* ==========================================
+   Bulk Edit
+   ========================================== */
+
+.kv-bulk-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 8px 8px;
+}
+
+.kv-bulk-textarea {
+  width: 100%;
+  min-height: 200px;
+  padding: 12px;
+  background: var(--bg-input);
+  border: 1px solid var(--border-light);
+  border-radius: 6px;
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  resize: vertical;
+  outline: none;
+}
+
+.kv-bulk-textarea:focus {
+  border-color: var(--accent-primary);
+}
+
+.kv-bulk-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.kv-bulk-apply,
+.kv-bulk-cancel {
+  padding: 6px 16px;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: var(--transition-fast);
+}
+
+.kv-bulk-apply {
+  background: var(--accent-primary);
+  border: none;
+  color: white;
+}
+
+.kv-bulk-apply:hover {
+  background: var(--accent-hover);
+}
+
+.kv-bulk-cancel {
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+}
+
+.kv-bulk-cancel:hover {
+  background: var(--bg-hover);
+}
