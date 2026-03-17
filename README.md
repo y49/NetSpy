@@ -4,7 +4,7 @@ A Chrome DevTools extension for inspecting, intercepting, and modifying network 
 
 一个用于检查、拦截和修改网络请求的 Chrome DevTools 扩展。
 
-![Chrome Extension](https://img.shields.io/badge/Chrome-MV3-blue) ![Version](https://img.shields.io/badge/version-1.3.0-green) ![License](https://img.shields.io/badge/license-MIT-brightgreen)
+![Chrome Extension](https://img.shields.io/badge/Chrome-MV3-blue) ![Version](https://img.shields.io/badge/version-1.4.0-green) [![License: MIT](https://img.shields.io/badge/license-MIT-brightgreen)](LICENSE)
 
 ## Features / 功能
 
@@ -51,7 +51,7 @@ Handle polling/repeated requests with configurable strategies:
 ### From Source / 从源码安装
 
 ```bash
-git clone https://github.com/y49/NetSpy.git
+git clone https://github.com/user/NetSpy.git
 cd NetSpy
 npm install
 npm run build
@@ -69,7 +69,7 @@ Load in Chrome / 在 Chrome 中加载：
 # Build (no minification) / 构建（不压缩）
 npm run build
 
-# Build for production (minified) / 生产构建（压缩）
+# Build for production (minified, console stripped) / 生产构建（压缩，移除日志）
 npm run build:prod
 ```
 
@@ -92,6 +92,24 @@ npm run build:prod
 - Status: 1xx, 2xx, 3xx, 4xx, 5xx / 状态码过滤
 - Search box for URL matching / 搜索框匹配 URL
 
+## Security & Permissions / 安全与权限
+
+NetSpy requires the following Chrome permissions:
+
+NetSpy 需要以下 Chrome 权限：
+
+| Permission / 权限 | Reason / 原因 |
+|------------|--------|
+| `debugger` | Core functionality: uses Chrome DevTools Protocol (Fetch domain) to intercept and modify network requests / 核心功能：使用 CDP Fetch 域拦截和修改网络请求 |
+| `webRequest` | Monitor network request lifecycle events / 监控网络请求生命周期事件 |
+| `storage` | Persist user settings and collections / 持久化用户设置和集合 |
+| `notifications` | Alert users about interception status / 通知用户拦截状态 |
+| `<all_urls>` | Required for intercepting requests to any domain. The extension only activates when the user explicitly enables interception with a URL pattern. / 拦截任意域名的请求所需。仅在用户明确开启拦截并设置 URL 模式时激活。 |
+
+**Privacy**: NetSpy runs entirely locally. No data is sent to external servers. All captured request data stays in your browser.
+
+**隐私**：NetSpy 完全在本地运行，不会向外部服务器发送任何数据。所有捕获的请求数据保留在浏览器中。
+
 ## Architecture / 架构
 
 ```
@@ -100,9 +118,9 @@ NetSpy/
 ├── panel.html             # DevTools panel UI
 ├── manifest.json          # Chrome MV3 manifest
 ├── build.js               # Build script (Terser + CleanCSS)
-├── styles/                # Modular CSS (12 files) / 模块化样式
-│   ├── variables.css      # CSS variables & theme / 变量与主题
-│   ├── base.css           # Reset & base styles / 基础样式
+├── styles/                # Modular CSS (12 files)
+│   ├── variables.css      # CSS variables & theme
+│   ├── base.css           # Reset & base styles
 │   ├── toolbar.css
 │   ├── layout.css
 │   ├── request-table.css
@@ -114,15 +132,15 @@ NetSpy/
 │   ├── json-viewer.css
 │   └── media-preview.css
 ├── js/
-│   ├── main.js            # Panel entry point / 面板入口
-│   ├── utils.js           # Shared utilities / 公共工具
+│   ├── main.js            # Panel entry point
+│   ├── utils.js           # Shared utilities
 │   ├── utils/
-│   │   ├── encoding.js    # Base64/UTF-8 encoding / 编码工具
-│   │   └── validators.js  # Input validation / 输入校验
+│   │   ├── encoding.js    # Base64/UTF-8 encoding
+│   │   └── validators.js  # Input validation
 │   ├── core/
-│   │   ├── store.js       # State management / 状态管理
-│   │   ├── constants.js   # Shared constants / 共享常量
-│   │   ├── eventBus.js    # Event system / 事件系统
+│   │   ├── store.js       # State management
+│   │   ├── constants.js   # Shared constants
+│   │   ├── eventBus.js    # Event system
 │   │   └── requestModel.js
 │   ├── services/
 │   │   ├── captureService.js
@@ -136,6 +154,18 @@ NetSpy/
 └── icons/
 ```
 
+## Contributing / 贡献
+
+Contributions are welcome! Please feel free to open issues or submit pull requests.
+
+欢迎贡献！请随时提交 Issue 或 Pull Request。
+
+1. Fork the repository / Fork 本仓库
+2. Create your feature branch (`git checkout -b feature/my-feature`)
+3. Commit your changes (`git commit -m 'Add my feature'`)
+4. Push to the branch (`git push origin feature/my-feature`)
+5. Open a Pull Request / 提交 Pull Request
+
 ## License / 许可证
 
-MIT
+[MIT](LICENSE)

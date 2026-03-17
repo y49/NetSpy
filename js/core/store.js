@@ -26,7 +26,10 @@ export const state = {
 
     // Pending modifications (for syncing intercepted request params)
     // Key: url pattern, Value: { url, method, headers, body, timestamp }
-    pendingModifications: new Map()
+    pendingModifications: new Map(),
+
+    // Collections
+    collections: []
 };
 
 // Subscribers
@@ -95,6 +98,62 @@ export function toggleGroupByDomain() {
 }
 
 // ==========================================
+// Collections Actions
+// ==========================================
+
+export function addCollection(name) {
+    const collection = {
+        id: 'col-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6),
+        name,
+        requests: [],
+        createdAt: Date.now()
+    };
+    state.collections.push(collection);
+    notify();
+    return collection;
+}
+
+export function deleteCollection(id) {
+    state.collections = state.collections.filter(c => c.id !== id);
+    notify();
+}
+
+export function renameCollection(id, name) {
+    const col = state.collections.find(c => c.id === id);
+    if (col) {
+        col.name = name;
+        notify();
+    }
+}
+
+export function addRequestToCollection(collectionId, request) {
+    const col = state.collections.find(c => c.id === collectionId);
+    if (!col) return;
+
+    // Store a snapshot (without _harEntry which is non-serializable)
+    const snapshot = { ...request };
+    delete snapshot._harEntry;
+    snapshot.savedAt = Date.now();
+    snapshot.savedId = 'saved-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6);
+
+    col.requests.push(snapshot);
+    notify();
+}
+
+export function removeRequestFromCollection(collectionId, savedId) {
+    const col = state.collections.find(c => c.id === collectionId);
+    if (col) {
+        col.requests = col.requests.filter(r => r.savedId !== savedId);
+        notify();
+    }
+}
+
+export function setCollections(collections) {
+    state.collections = collections;
+    notify();
+}
+
+// ==========================================
 // Store Export
 // ==========================================
 
@@ -108,7 +167,13 @@ export const store = {
     setFilter,
     toggleRecording,
     togglePreserveLog,
-    toggleGroupByDomain
+    toggleGroupByDomain,
+    addCollection,
+    deleteCollection,
+    renameCollection,
+    addRequestToCollection,
+    removeRequestFromCollection,
+    setCollections
 };
 
 export default store;

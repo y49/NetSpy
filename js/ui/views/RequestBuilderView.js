@@ -668,7 +668,7 @@ export class RequestBuilderView {
      * 处理响应视图切换
      */
     handleResponseViewChange(view) {
-        // TODO: 实现 Pretty/Raw/Preview 切换
+        // Response view switching (Pretty/Raw/Preview) is not yet implemented
     }
 
     /**
@@ -807,7 +807,6 @@ export class RequestBuilderView {
     saveToCollection() {
         const request = this.buildRequest();
 
-        // TODO: 显示保存对话框
         const name = prompt('Enter a name for this request:', request.getFilename());
         if (!name) return;
 

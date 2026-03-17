@@ -12,8 +12,8 @@
 
 /* Left Panel - Request List */
 .left-panel {
-  width: 50%;
-  min-width: 400px;
+  flex: 1;
+  min-width: 300px;
   display: flex;
   flex-direction: column;
   background: var(--bg-primary);
@@ -38,6 +38,7 @@
 /* Right Panel - Detail View */
 .right-panel {
   flex: 1;
+  min-width: 350px;
   display: flex;
   flex-direction: column;
   background: var(--bg-secondary);

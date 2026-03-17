@@ -5,6 +5,8 @@
 import { store } from '../core/store.js';
 import { debounce } from '../utils.js';
 import * as requestList from './requestList.js';
+import { generateHAR } from '../utils/exportUtils.js';
+import { saveInterceptRules, loadInterceptRules, deleteInterceptRule } from '../services/storageService.js';
 
 // DOM Elements
 let recordBtn = null;
@@ -38,6 +40,49 @@ function setupEventListeners() {
     recordBtn?.addEventListener('click', handleRecord);
     clearBtn?.addEventListener('click', handleClear);
     refreshBtn?.addEventListener('click', handleRefresh);
+
+    // Export HAR
+    document.getElementById('exportHarBtn')?.addEventListener('click', handleExportHAR);
+
+    // Intercept rules save/load
+    const saveRuleBtn = document.getElementById('saveRuleBtn');
+    const rulesDropdownBtn = document.getElementById('rulesDropdownBtn');
+    const rulesDropdown = document.getElementById('rulesDropdown');
+
+    saveRuleBtn?.addEventListener('click', async () => {
+        const pattern = interceptPattern?.value?.trim();
+        if (!pattern) return;
+
+        const mode = interceptMode?.value || 'request';
+        const pollingSelect = document.getElementById('pollingStrategy');
+        const pollingStrategy = pollingSelect?.value || 'keep_latest';
+
+        const rules = await loadInterceptRules();
+        if (rules.some(r => r.pattern === pattern && r.mode === mode)) return;
+
+        rules.push({ pattern, mode, pollingStrategy, createdAt: Date.now() });
+        await saveInterceptRules(rules);
+
+        saveRuleBtn.classList.add('success');
+        setTimeout(() => saveRuleBtn.classList.remove('success'), 1500);
+    });
+
+    rulesDropdownBtn?.addEventListener('click', () => {
+        rulesDropdown.hidden = !rulesDropdown.hidden;
+        if (!rulesDropdown.hidden) {
+            // Position dropdown using fixed positioning to escape overflow clipping
+            const rect = rulesDropdownBtn.getBoundingClientRect();
+            rulesDropdown.style.top = (rect.bottom + 4) + 'px';
+            rulesDropdown.style.right = (window.innerWidth - rect.right) + 'px';
+            refreshRulesDropdown();
+        }
+    });
+
+    document.addEventListener('click', (e) => {
+        if (rulesDropdown && !rulesDropdownBtn?.contains(e.target) && !rulesDropdown.contains(e.target)) {
+            rulesDropdown.hidden = true;
+        }
+    });
 
     // Search with debounce
     searchInput?.addEventListener('input', debounce((e) => {
@@ -101,6 +146,71 @@ function handleRefresh() {
     // Drop all paused requests before refresh
     dropAllPausedRequests();
     chrome.devtools.inspectedWindow.reload();
+}
+
+function handleExportHAR() {
+    const requests = store.state.requests;
+    if (requests.length === 0) return;
+
+    const har = generateHAR(requests);
+    const blob = new Blob([JSON.stringify(har, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `netspy-${new Date().toISOString().slice(0, 10)}.har`;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+async function refreshRulesDropdown() {
+    const list = document.getElementById('rulesDropdownList');
+    if (!list) return;
+
+    const rules = await loadInterceptRules();
+
+    if (rules.length === 0) {
+        list.innerHTML = '<div class="rules-empty">No saved rules</div>';
+        return;
+    }
+
+    list.innerHTML = rules.map((rule, i) => `
+        <div class="rule-item" data-index="${i}">
+            <div class="rule-item-info">
+                <div class="rule-item-name">${escapeHtmlToolbar(rule.pattern)}</div>
+                <div class="rule-item-detail">${rule.mode} &middot; ${rule.pollingStrategy.replace('_', ' ')}</div>
+            </div>
+            <button class="rule-item-delete" data-delete="${i}" title="Delete rule">&times;</button>
+        </div>
+    `).join('');
+
+    // Click to apply rule
+    list.querySelectorAll('.rule-item-info').forEach(el => {
+        el.addEventListener('click', () => {
+            const idx = el.closest('.rule-item').dataset.index;
+            const rule = rules[idx];
+            if (interceptPattern) interceptPattern.value = rule.pattern;
+            if (interceptMode) interceptMode.value = rule.mode;
+            const pollingSelect = document.getElementById('pollingStrategy');
+            if (pollingSelect) pollingSelect.value = rule.pollingStrategy;
+            document.getElementById('rulesDropdown').hidden = true;
+        });
+    });
+
+    // Click to delete rule
+    list.querySelectorAll('.rule-item-delete').forEach(el => {
+        el.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            await deleteInterceptRule(parseInt(el.dataset.delete));
+            refreshRulesDropdown();
+        });
+    });
+}
+
+function escapeHtmlToolbar(str) {
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
 }
 
 // Drop all paused requests

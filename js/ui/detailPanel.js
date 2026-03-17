@@ -7,6 +7,8 @@ import { formatBytes, formatTime, escapeHtml, getHeaderValue, prettifyJson, dete
 import { renderJsonTree, renderImagePreview, renderVideoPreview, renderAudioPreview, renderHtmlPreview, getContentCategory, getMimeType } from './responseViewer.js';
 import { validateJson, validateUrl, validateHeaderName, validateStatusCode } from '../utils/validators.js';
 import { KeyValueEditor } from './components/KeyValueEditor.js';
+import { generateCurl } from '../utils/exportUtils.js';
+import { saveCurrentRequest } from './collectionsPanel.js';
 
 // DOM Elements
 let detailView = null;
@@ -14,6 +16,8 @@ let emptyState = null;
 let editMethod = null;
 let editUrl = null;
 let sendBtn = null;
+let copyCurlBtn = null;
+let saveToCollectionBtn = null;
 
 // Current state
 let currentRequest = null;
@@ -55,8 +59,25 @@ export function init() {
     editMethod = document.getElementById('editMethod');
     editUrl = document.getElementById('editUrl');
     sendBtn = document.getElementById('sendBtn');
+    copyCurlBtn = document.getElementById('copyCurlBtn');
+    saveToCollectionBtn = document.getElementById('saveToCollectionBtn');
 
     if (!detailView) return;
+
+    // Copy as cURL
+    if (copyCurlBtn) {
+        copyCurlBtn.addEventListener('click', copyAsCurl);
+    }
+
+    // Save to collection
+    if (saveToCollectionBtn) {
+        saveToCollectionBtn.addEventListener('click', () => {
+            if (!currentRequest) return;
+            saveCurrentRequest(currentRequest);
+            saveToCollectionBtn.classList.add('success');
+            setTimeout(() => saveToCollectionBtn.classList.remove('success'), 1500);
+        });
+    }
 
     setupTabs();
     setupEventListeners();
@@ -529,11 +550,17 @@ function getBodyForSend() {
     switch (currentBodyType) {
         case 'formdata': {
             if (!bodyModified) {
-                // Body not modified — use original body to preserve binary file content
-                return { body: editableBody, boundary: getOriginalBoundary(), pairs: null };
+                // Body not modified — use original raw body for intercept mode
+                // (preserves binary file content without re-encoding).
+                // Also parse pairs for replay mode (FormData API needs them).
+                const pairs = bodyEditor
+                    ? bodyEditor.getData().filter(p => p.enabled)
+                    : parseFormDataBody(editableBody);
+                return { body: editableBody, boundary: getOriginalBoundary(), pairs };
             }
             if (!bodyEditor) {
-                return { body: editableBody, boundary: getOriginalBoundary(), pairs: null };
+                const pairs = parseFormDataBody(editableBody);
+                return { body: editableBody, boundary: getOriginalBoundary(), pairs };
             }
             const pairs = bodyEditor.getData().filter(p => p.enabled);
             const result = buildMultipartBody(pairs);
@@ -731,14 +758,15 @@ function parseFormDataBody(body) {
             // Find the value (after double line break or just after the header)
             const headerEndIndex = part.indexOf('\r\n\r\n');
             let value = '';
+            const isFile = !!filenameMatch;
 
             if (headerEndIndex !== -1) {
-                value = part.substring(headerEndIndex + 4).trim();
+                value = part.substring(headerEndIndex + 4);
             } else {
                 // Try single line breaks
                 const singleBreakIndex = part.indexOf('\n\n');
                 if (singleBreakIndex !== -1) {
-                    value = part.substring(singleBreakIndex + 2).trim();
+                    value = part.substring(singleBreakIndex + 2);
                 } else {
                     // Try to get value after the last header line
                     const lines = part.split(/\r?\n/);
@@ -751,12 +779,23 @@ function parseFormDataBody(body) {
                             valueStarted = true;
                         }
                     }
-                    value = valueLines.join('\n').trim();
+                    value = valueLines.join('\n');
                 }
             }
 
+            // Remove trailing line endings before next boundary
+            // For file content: only strip the final \r\n (preserve binary data)
+            // For text fields: trim whitespace
+            if (isFile) {
+                if (value.endsWith('\r\n')) value = value.slice(0, -2);
+                else if (value.endsWith('\n')) value = value.slice(0, -1);
+            } else {
+                value = value.trim();
+            }
+
             // Clean up trailing boundary markers
-            value = value.replace(/^-{2,}[\w]*$/, '').trim();
+            value = value.replace(/^-{2,}[\w]*$/, '');
+            if (!isFile) value = value.trim();
 
             if (filenameMatch) {
                 // Extract Content-Type for file parts
@@ -1053,6 +1092,47 @@ function getStatusText(code) {
 // ==========================================
 // Actions
 // ==========================================
+
+function copyAsCurl() {
+    if (!currentRequest) return;
+
+    const values = getValues();
+    const reqForCurl = {
+        url: values.url,
+        method: values.method,
+        headers: values.headers,
+        postData: values.body || currentRequest.postData
+    };
+
+    const curl = generateCurl(reqForCurl);
+    copyToClipboard(curl, copyCurlBtn, 'Copy as cURL');
+}
+
+function copyToClipboard(text, btn, originalTitle) {
+    navigator.clipboard.writeText(text).then(() => {
+        showCopyFeedback(btn, originalTitle);
+    }).catch(() => {
+        // Fallback for DevTools context
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.cssText = 'position:fixed;opacity:0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        showCopyFeedback(btn, originalTitle);
+    });
+}
+
+function showCopyFeedback(btn, originalTitle) {
+    if (!btn) return;
+    btn.classList.add('success');
+    btn.title = 'Copied!';
+    setTimeout(() => {
+        btn.classList.remove('success');
+        btn.title = originalTitle;
+    }, 1500);
+}
 
 export function copyResponseBody() {
     const body = currentRequest?.responseBody || '';

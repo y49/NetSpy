@@ -11,13 +11,13 @@ const attachedTabs = new Map(); // tabId -> { patterns: [], mode: string }
 
 // InterceptionManager state (global)
 const interceptionState = {
-    // 主存储：所有活跃的拦截请求
+    // Primary store: all active intercepted requests
     active: new Map(), // interceptionId -> { networkId, url, normalizedUrl, timestamp, stage, tabId, metadata }
 
-    // URL 映射：用于处理循环请求，同标准化URL只保留最新
+    // URL mapping: for polling requests, only keep latest per normalized URL
     urlLatest: new Map(), // normalizedUrl -> interceptionId
 
-    // 网络 ID 映射：用于响应 Network 事件的清理
+    // Network ID mapping: for cleanup via Network events
     networkToInterception: new Map(), // networkId -> interceptionId
 };
 
@@ -29,11 +29,11 @@ const CLEANUP_INTERVAL = 5000; // 5 seconds cleanup scan
 // POLLING REQUEST STRATEGY
 // ==========================================
 const POLLING_STRATEGY = {
-    KEEP_LATEST: 'keep_latest',   // 放行旧请求，只保留最新
-    BLOCK_OLD: 'block_old',       // 阻止旧请求，只保留最新
-    BLOCK_ALL: 'block_all',       // 阻止所有同 URL 请求（包括新的）
-    KEEP_ALL: 'keep_all',         // 全部保留，用户手动处理
-    QUEUE: 'queue',               // 队列模式：处理完一个才放行下一个
+    KEEP_LATEST: 'keep_latest',   // Release old request, keep newest
+    BLOCK_OLD: 'block_old',       // Block old request, keep newest
+    BLOCK_ALL: 'block_all',       // Block all duplicate URL requests (including new)
+    KEEP_ALL: 'keep_all',         // Keep all, user handles manually
+    QUEUE: 'queue',               // Queue mode: process one at a time
 };
 
 // Default polling strategy (can be changed via message)
@@ -43,14 +43,14 @@ let currentPollingStrategy = POLLING_STRATEGY.KEEP_LATEST;
 // URL NORMALIZATION
 // ==========================================
 
-// 标准化 URL，移除动态参数
+// Normalize URL by removing dynamic params (timestamps, cache-busters)
 function normalizeUrl(url) {
     try {
         const u = new URL(url);
-        // 移除常见的时间戳/随机数参数
+        // Remove common timestamp/random params
         const dynamicParams = ['_t', 't', 'timestamp', '_', 'random', 'v', 'nocache', 'cb', 'callback'];
         dynamicParams.forEach(p => u.searchParams.delete(p));
-        // 对于 JSONP 回调参数，只保留参数名不保留值
+        // For JSONP callback params, keep key but normalize value
         for (const [key] of u.searchParams) {
             if (key.toLowerCase().includes('callback') || key.toLowerCase().includes('jsonp')) {
                 u.searchParams.set(key, '__callback__');
@@ -66,7 +66,7 @@ function normalizeUrl(url) {
 // INTERCEPTION STATE MANAGEMENT
 // ==========================================
 
-// 注册新拦截
+// Register a new interception
 function registerInterception(interceptionId, metadata) {
     interceptionState.active.set(interceptionId, metadata);
     interceptionState.urlLatest.set(metadata.normalizedUrl, interceptionId);
@@ -75,14 +75,14 @@ function registerInterception(interceptionId, metadata) {
     }
 }
 
-// 移除拦截（统一出口）
+// Remove interception (single exit point for cleanup)
 function removeFromState(interceptionId) {
     const data = interceptionState.active.get(interceptionId);
     if (!data) return;
 
     interceptionState.active.delete(interceptionId);
 
-    // 只有当 urlLatest 指向的是当前 ID 才清除
+    // Only clear urlLatest if it still points to this ID
     if (interceptionState.urlLatest.get(data.normalizedUrl) === interceptionId) {
         interceptionState.urlLatest.delete(data.normalizedUrl);
     }
@@ -98,7 +98,7 @@ function removeFromState(interceptionId) {
     }
 }
 
-// 检查 ID 是否有效
+// Check if interception ID is still valid
 function isValidInterception(interceptionId) {
     return interceptionState.active.has(interceptionId);
 }
@@ -107,7 +107,7 @@ function isValidInterception(interceptionId) {
 // SAFE EXECUTION WRAPPER
 // ==========================================
 
-// 检测是否为 Invalid ID 错误
+// Detect "Invalid InterceptionId" errors from CDP
 function isInvalidIdError(error) {
     const msg = error?.message || String(error);
     return msg.includes('-32602') ||
@@ -115,11 +115,11 @@ function isInvalidIdError(error) {
         msg.includes('No resource with given identifier');
 }
 
-// 安全执行 Debugger 命令
+// Safely execute a debugger command with pre-validation and cleanup
 async function safeExecute(tabId, method, params) {
     const interceptionId = params.requestId;
 
-    // 前置校验
+    // Pre-validation
     if (interceptionId && !isValidInterception(interceptionId)) {
         console.warn(`safeExecute: ID already invalid: ${interceptionId}`);
         return { success: false, reason: 'already_invalid' };
@@ -136,20 +136,20 @@ async function safeExecute(tabId, method, params) {
             removeFromState(interceptionId);
         }
 
-        // 特定错误静默处理
+        // Handle known errors silently
         if (isInvalidIdError(error)) {
             console.warn(`safeExecute: ID expired during execution: ${interceptionId}`);
             notifyUIRemove(interceptionId, 'expired');
             return { success: false, reason: 'expired' };
         }
 
-        // 其他错误上报
+        // Report unexpected errors
         console.error(`safeExecute failed:`, error);
         return { success: false, reason: 'unknown', error: error.message };
     }
 }
 
-// 静默放行（不通知 UI，用于自动处理）
+// Silently continue a request (no UI notification, for automatic handling)
 async function silentContinue(tabId, interceptionId, stage = 'request') {
     if (!isValidInterception(interceptionId)) return;
 
@@ -177,12 +177,12 @@ async function silentContinue(tabId, interceptionId, stage = 'request') {
             }
         }
     } catch (e) {
-        // 忽略所有错误（静默处理）
+        // Ignore errors (silent handling)
     }
     removeFromState(interceptionId);
 }
 
-// 静默阻止请求（用于 BLOCK_OLD 和 BLOCK_ALL 策略）
+// Silently block a request (used by BLOCK_OLD and BLOCK_ALL strategies)
 async function silentDrop(tabId, interceptionId) {
     if (!isValidInterception(interceptionId)) return;
 
@@ -192,12 +192,12 @@ async function silentDrop(tabId, interceptionId) {
             errorReason: 'BlockedByClient'
         });
     } catch (e) {
-        // 忽略所有错误（静默处理）
+        // Ignore errors (silent handling)
     }
     removeFromState(interceptionId);
 }
 
-// UI 通知函数
+// Notify UI about removed interceptions
 function notifyUIRemove(interceptionId, reason) {
     chrome.runtime.sendMessage({
         type: 'INTERCEPTION_REMOVED',
@@ -209,7 +209,7 @@ function notifyUIRemove(interceptionId, reason) {
 // TIMEOUT CLEANUP
 // ==========================================
 
-// 启动超时清理定时器
+// Start timeout cleanup timer
 function startTimeoutWatcher() {
     setInterval(() => {
         const now = Date.now();
@@ -221,7 +221,7 @@ function startTimeoutWatcher() {
             }
         }
 
-        // 批量处理过期请求
+        // Process expired requests in batch
         expiredIds.forEach(({ interceptionId, tabId, stage }) => {
             console.log(`Timeout cleanup: ${interceptionId}`);
             silentContinue(tabId, interceptionId, stage);
@@ -386,7 +386,15 @@ async function continueRequest(tabId, requestId, modifications = {}) {
                 ? modifications.postData
                 : JSON.stringify(modifications.postData);
 
-            params.postData = EncodingUtils.utf8ToBase64(postDataStr);
+            if (modifications.bodyType === 'formdata') {
+                // Multipart form-data may contain binary file content.
+                // CDP provides postData as a binary string (Latin-1: each char = one byte).
+                // btoa() preserves this 1:1 mapping, while TextEncoder (UTF-8) would
+                // expand bytes 128-255 to multi-byte sequences, corrupting file data.
+                params.postData = btoa(postDataStr);
+            } else {
+                params.postData = EncodingUtils.utf8ToBase64(postDataStr);
+            }
         }
 
         await chrome.debugger.sendCommand({ tabId }, "Fetch.continueRequest", params);
@@ -574,29 +582,29 @@ async function handleRequestPaused(tabId, params) {
     if (isDuplicate) {
         switch (currentPollingStrategy) {
             case POLLING_STRATEGY.KEEP_LATEST:
-                // 放行旧请求，只保留最新
+                // Release old request, keep newest
                 console.log(`[KEEP_LATEST] Continuing older ${stage}: ${oldInterceptionId}`);
                 silentContinue(tabId, oldInterceptionId, stage);
                 notifyUIRemove(oldInterceptionId, 'replaced');
                 break;
 
             case POLLING_STRATEGY.BLOCK_OLD:
-                // 阻止旧请求，只保留最新
+                // Block old request, keep newest
                 console.log(`[BLOCK_OLD] Dropping older ${stage}: ${oldInterceptionId}`);
                 silentDrop(tabId, oldInterceptionId);
                 notifyUIRemove(oldInterceptionId, 'blocked');
                 break;
 
             case POLLING_STRATEGY.BLOCK_ALL:
-                // 阻止所有同 URL 请求（包括新的）
+                // Block all duplicate URL requests (including new ones)
                 console.log(`[BLOCK_ALL] Dropping new ${stage}: ${interceptionId}`);
                 silentDrop(tabId, interceptionId);
                 return; // Don't register this request
 
             case POLLING_STRATEGY.QUEUE:
-                // 队列模式：如果有旧请求还在，不处理新请求（等旧的处理完）
+                // Queue mode: if old request pending, release new one (wait for old to complete)
                 console.log(`[QUEUE] Holding new ${stage}, waiting for: ${oldInterceptionId}`);
-                // 新请求直接放行，等旧的处理完
+                // Release new request, wait for old one to be handled
                 try {
                     if (stage === 'request') {
                         await chrome.debugger.sendCommand({ tabId }, 'Fetch.continueRequest', { requestId: interceptionId });
@@ -608,7 +616,7 @@ async function handleRequestPaused(tabId, params) {
 
             case POLLING_STRATEGY.KEEP_ALL:
             default:
-                // 全部保留，用户手动处理
+                // Keep all, user handles manually
                 console.log(`[KEEP_ALL] Keeping both requests, old: ${oldInterceptionId}, new: ${interceptionId}`);
                 break;
         }
@@ -899,8 +907,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
                                 const formData = new FormData();
                                 for (const pair of requestData.bodyPairs) {
                                     if (pair.type === 'file' && pair.value) {
-                                        // Create a Blob for file fields to preserve content type
-                                        const blob = new Blob([pair.value], {
+                                        // Convert binary string (Latin-1) to ArrayBuffer.
+                                        // pair.value comes from CDP postData where each char = one byte.
+                                        // Blob([string]) would encode as UTF-8, corrupting bytes > 127.
+                                        const bytes = new Uint8Array(pair.value.length);
+                                        for (let i = 0; i < pair.value.length; i++) {
+                                            bytes[i] = pair.value.charCodeAt(i);
+                                        }
+                                        const blob = new Blob([bytes], {
                                             type: pair.contentType || 'application/octet-stream'
                                         });
                                         formData.append(pair.name, blob, pair.fileName || 'file');

@@ -1,7 +1,25 @@
 {
     "name": "netspy",
-    "version": "1.3.0",
-    "description": "Network Request Interceptor for Chrome DevTools",
+    "version": "1.4.0",
+    "description": "A Chrome DevTools extension for inspecting, intercepting, and modifying network requests",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/user/NetSpy.git"
+    },
+    "homepage": "https://github.com/user/NetSpy#readme",
+    "bugs": {
+        "url": "https://github.com/user/NetSpy/issues"
+    },
+    "keywords": [
+        "chrome-extension",
+        "devtools",
+        "network",
+        "intercept",
+        "proxy",
+        "debugging",
+        "http"
+    ],
     "scripts": {
         "build": "node build.js",
         "build:prod": "node build.js --minify"

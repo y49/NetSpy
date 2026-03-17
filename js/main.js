@@ -6,6 +6,7 @@ import { store } from './core/store.js';
 import * as toolbar from './ui/toolbar.js';
 import * as requestList from './ui/requestList.js';
 import * as detailPanel from './ui/detailPanel.js';
+import * as collectionsPanel from './ui/collectionsPanel.js';
 
 // Initialize when DOM is ready
 document.addEventListener('DOMContentLoaded', init);
@@ -17,6 +18,7 @@ async function init() {
     toolbar.init();
     requestList.init();
     detailPanel.init();
+    collectionsPanel.init();
 
     // Setup resize handles
     setupResizer();
@@ -908,8 +910,12 @@ async function sendRequest() {
                         method: values.method,
                         headers: interceptHeaders,
                     };
-                    if (requestBody !== undefined) {
+                    // For unmodified formdata: don't send postData so Chrome
+                    // preserves the original binary body (avoids encoding corruption).
+                    const skipPostData = values.bodyType === 'formdata' && !values.bodyModified;
+                    if (requestBody !== undefined && !skipPostData) {
                         modifications.postData = requestBody;
+                        modifications.bodyType = values.bodyType;
                     }
 
                     response = await chrome.runtime.sendMessage({

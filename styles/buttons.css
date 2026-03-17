@@ -135,3 +135,7 @@
   color: var(--text-muted);
 }
 
+.icon-btn-sm.success {
+  color: var(--color-success, #22c55e);
+}
+
