@@ -37,9 +37,10 @@ export function validateHeaderName(name) {
     if (/[^\w-]/.test(name) && !name.startsWith(':')) {
         return { valid: false, warning: `Invalid characters in header name: "${name}"` };
     }
+    // Auto-managed headers — no warning needed, browser/debugger API handles them
     const autoHeaders = ['content-length', 'transfer-encoding', 'host'];
     if (autoHeaders.includes(name.toLowerCase())) {
-        return { valid: true, warning: `"${name}" is auto-calculated and may be overridden by the browser` };
+        return { valid: true };
     }
     return { valid: true };
 }
