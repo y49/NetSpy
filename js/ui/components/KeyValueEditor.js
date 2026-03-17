@@ -113,7 +113,7 @@ export class KeyValueEditor {
      */
     render() {
         this.container.innerHTML = '';
-        this.container.className = 'kv-editor';
+        this.container.classList.add('kv-editor');
 
         // 工具栏
         if (this.options.showBulkEdit && !this.options.readOnly) {
@@ -521,7 +521,7 @@ export class KeyValueEditor {
      */
     destroy() {
         this.container.innerHTML = '';
-        this.container.className = '';
+        this.container.classList.remove('kv-editor');
         this.onChangeCallbacks = [];
     }
 }
