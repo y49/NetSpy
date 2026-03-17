@@ -902,23 +902,14 @@ async function sendRequest() {
                 const maxRetries = 3;
 
                 while (retryCount < maxRetries) {
-                    const modifications = {
-                        url: values.url,
-                        method: values.method,
-                    };
+                    const modifications = {};
 
-                    if (values.bodyModified && requestBody !== undefined) {
-                        // Body was modified — send rebuilt body + updated headers
-                        modifications.postData = requestBody;
-                        modifications.headers = headersArray;
-                    } else if (values.bodyType === 'formdata' && !values.bodyModified) {
-                        // Formdata body NOT modified — don't send postData (preserve
-                        // original binary body), and strip Content-Length from headers
-                        // (let Chrome recalculate for the original body)
-                        modifications.headers = headersArray.filter(
-                            h => h.name.toLowerCase() !== 'content-length'
-                        );
+                    if (values.bodyType === 'formdata' && !values.bodyModified) {
+                        // Formdata body NOT modified — pass nothing, let Chrome
+                        // use the entire original request as-is (preserves binary files)
                     } else {
+                        modifications.url = values.url;
+                        modifications.method = values.method;
                         modifications.headers = headersArray;
                         if (requestBody !== undefined) {
                             modifications.postData = requestBody;
