@@ -1044,14 +1044,15 @@ chrome.commands.onCommand.addListener(async (command) => {
     }
 });
 
-// Show welcome notification on installation
-chrome.runtime.onInstalled.addListener(() => {
-    console.log("NetSpy extension installed");
-
-    showNotification(
-        '🎉 NetSpy Installed',
-        'Click the extension icon to get started'
-    );
+// Show welcome notification only on first install
+chrome.runtime.onInstalled.addListener((details) => {
+    if (details.reason === 'install') {
+        console.log("NetSpy extension installed");
+        showNotification(
+            '🎉 NetSpy Installed',
+            'Click the extension icon to get started'
+        );
+    }
 });
 
 // Cleanup when tab is closed

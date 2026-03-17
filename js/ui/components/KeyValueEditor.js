@@ -113,7 +113,11 @@ export class KeyValueEditor {
      */
     render() {
         this.container.innerHTML = '';
-        this.container.classList.add('kv-editor');
+
+        // Create wrapper to avoid overriding container's display (e.g. tab-pane)
+        this.wrapper = document.createElement('div');
+        this.wrapper.className = 'kv-editor';
+        this.container.appendChild(this.wrapper);
 
         // 工具栏
         if (this.options.showBulkEdit && !this.options.readOnly) {
@@ -133,13 +137,13 @@ export class KeyValueEditor {
                 this.toggleBulkEdit();
             });
 
-            this.container.appendChild(toolbar);
+            this.wrapper.appendChild(toolbar);
         }
 
         // 表格容器
         this.tableContainer = document.createElement('div');
         this.tableContainer.className = 'kv-table-container';
-        this.container.appendChild(this.tableContainer);
+        this.wrapper.appendChild(this.tableContainer);
 
         // 批量编辑容器
         this.bulkContainer = document.createElement('div');
@@ -159,7 +163,7 @@ export class KeyValueEditor {
             this.toggleBulkEdit(false);
         });
 
-        this.container.appendChild(this.bulkContainer);
+        this.wrapper.appendChild(this.bulkContainer);
 
         this.renderItems();
     }
@@ -521,7 +525,6 @@ export class KeyValueEditor {
      */
     destroy() {
         this.container.innerHTML = '';
-        this.container.classList.remove('kv-editor');
         this.onChangeCallbacks = [];
     }
 }
