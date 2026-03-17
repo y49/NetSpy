@@ -6,6 +6,7 @@ import { store } from '../core/store.js';
 import { formatBytes, formatTime, escapeHtml, getHeaderValue, prettifyJson, detectContentType } from '../utils.js';
 import { renderJsonTree, renderImagePreview, renderVideoPreview, renderAudioPreview, renderHtmlPreview, getContentCategory, getMimeType } from './responseViewer.js';
 import { validateJson, validateUrl, validateHeaderName, validateStatusCode } from '../utils/validators.js';
+import { KeyValueEditor } from './components/KeyValueEditor.js';
 
 // DOM Elements
 let detailView = null;
@@ -26,9 +27,15 @@ let interceptStage = null; // 'request' or 'response'
 // Editable data (for editing mode)
 let editableParams = [];
 let editableHeaders = [];
-let editableBody = '';
-let editableBodyPairs = []; // For form-data/urlencoded
-const bodyTypeCache = new Map(); // bodyType -> { body, pairs }
+let editableBody = '';          // Original body from captured request (for initial parse)
+let editableBodyRaw = '';       // For raw/json editing only
+const bodyTypeCache = new Map(); // bodyType -> { pairs, raw }
+
+// Editor instances
+let paramsEditor = null;
+let headersEditor = null;
+let bodyEditor = null;
+let responseHeadersEditor = null;
 
 // Editable response data (for response intercept)
 let editableResponseStatus = 200;
@@ -216,6 +223,11 @@ export function showRequest(request) {
 }
 
 function initEditableData() {
+    // Reset editors when switching to a new request
+    paramsEditor?.destroy(); paramsEditor = null;
+    headersEditor?.destroy(); headersEditor = null;
+    bodyEditor?.destroy(); bodyEditor = null;
+    responseHeadersEditor?.destroy(); responseHeadersEditor = null;
     bodyTypeCache.clear();
 
     // Parse params from URL
@@ -236,6 +248,7 @@ function initEditableData() {
 
     // Set body
     editableBody = currentRequest.postData || '';
+    editableBodyRaw = editableBody;
 
     // Detect body type
     const contentType = getHeaderValue(currentRequest.headers, 'content-type').toLowerCase();
@@ -267,16 +280,27 @@ export function showEmpty() {
     emptyState?.classList.remove('hidden');
     currentRequest = null;
     lastEditedRequestId = null;  // Clear the edit tracking
+    // Destroy editor instances
+    paramsEditor?.destroy(); paramsEditor = null;
+    headersEditor?.destroy(); headersEditor = null;
+    bodyEditor?.destroy(); bodyEditor = null;
+    responseHeadersEditor?.destroy(); responseHeadersEditor = null;
 }
 
 export function getValues() {
+    // Sync editor data before collecting values
+    if (paramsEditor) editableParams = paramsEditor.getData();
+    if (headersEditor) editableHeaders = headersEditor.getData();
+
+    const bodyResult = getBodyForSend();
+
     return {
         url: editUrl?.value || '',
         method: editMethod?.value || 'GET',
         headers: editableHeaders.filter(h => h.enabled),
-        body: editableBody,
-        bodyPairs: editableBodyPairs,
+        body: bodyResult.body,
         bodyType: currentBodyType,
+        bodyBoundary: bodyResult.boundary,
         isInterceptEdit: isInterceptEditMode,
         interceptRequestId: interceptRequestId,
         interceptStage: interceptStage,
@@ -396,40 +420,18 @@ function renderParams() {
     const container = document.getElementById('paramsPane');
     if (!container) return;
 
-    container.innerHTML = `
-        <div class="kv-editor">
-            <div class="kv-header">
-                <span class="kv-title">Query Parameters</span>
-                <button class="kv-add-btn" id="addParamBtn">+ Add</button>
-            </div>
-            <table class="kv-table">
-                <thead>
-                    <tr>
-                        <th class="kv-check"></th>
-                        <th>Key</th>
-                        <th>Value</th>
-                        <th class="kv-actions"></th>
-                    </tr>
-                </thead>
-                <tbody id="paramsTableBody">
-                    ${editableParams.map((p, i) => createKVRow(p, i, 'param')).join('')}
-                </tbody>
-            </table>
-            ${editableParams.length === 0 ? '<div class="kv-empty">No parameters. Click "+ Add" to create one.</div>' : ''}
-        </div>
-    `;
-
-    // Bind events
-    container.querySelector('#addParamBtn')?.addEventListener('click', () => addParam());
-    bindKVEvents(container, 'param', editableParams, renderParams);
-}
-
-function addParam() {
-    editableParams.push({ name: '', value: '', enabled: true });
-    renderParams();
-    // Focus on new row
-    const inputs = document.querySelectorAll('#paramsTableBody .kv-input.key');
-    inputs[inputs.length - 1]?.focus();
+    if (!paramsEditor) {
+        paramsEditor = new KeyValueEditor(container, {
+            placeholder: { key: 'Parameter', value: 'Value' },
+            showCheckbox: true,
+            showBulkEdit: true,
+        });
+        paramsEditor.onChange(() => {
+            editableParams = paramsEditor.getData();
+            updateUrlFromParams();
+        });
+    }
+    paramsEditor.setData(editableParams);
 }
 
 // ==========================================
@@ -440,105 +442,22 @@ function renderHeaders() {
     const container = document.getElementById('headersPane');
     if (!container) return;
 
-    container.innerHTML = `
-        <div class="kv-editor">
-            <div class="kv-header">
-                <span class="kv-title">Request Headers</span>
-                <button class="kv-add-btn" id="addHeaderBtn">+ Add</button>
-            </div>
-            <table class="kv-table">
-                <thead>
-                    <tr>
-                        <th class="kv-check"></th>
-                        <th>Key</th>
-                        <th>Value</th>
-                        <th class="kv-actions"></th>
-                    </tr>
-                </thead>
-                <tbody id="headersTableBody">
-                    ${editableHeaders.map((h, i) => createKVRow(h, i, 'header')).join('')}
-                </tbody>
-            </table>
-            ${editableHeaders.length === 0 ? '<div class="kv-empty">No headers. Click "+ Add" to create one.</div>' : ''}
-        </div>
-    `;
-
-    container.querySelector('#addHeaderBtn')?.addEventListener('click', () => addHeader());
-    bindKVEvents(container, 'header', editableHeaders, renderHeaders);
-}
-
-function addHeader() {
-    editableHeaders.push({ name: '', value: '', enabled: true });
-    renderHeaders();
-    const inputs = document.querySelectorAll('#headersTableBody .kv-input.key');
-    inputs[inputs.length - 1]?.focus();
+    if (!headersEditor) {
+        headersEditor = new KeyValueEditor(container, {
+            placeholder: { key: 'Header', value: 'Value' },
+            showCheckbox: true,
+            showBulkEdit: true,
+        });
+        headersEditor.onChange(() => {
+            editableHeaders = headersEditor.getData();
+        });
+    }
+    headersEditor.setData(editableHeaders);
 }
 
 // ==========================================
-// KV Row Helper
+// URL/Params Sync
 // ==========================================
-
-function createKVRow(item, index, type) {
-    return `
-        <tr class="kv-row ${!item.enabled ? 'disabled' : ''}" data-index="${index}">
-            <td class="kv-check">
-                <input type="checkbox" ${item.enabled ? 'checked' : ''} data-action="toggle">
-            </td>
-            <td>
-                <input type="text" class="kv-input key" value="${escapeHtml(item.name)}" 
-                       placeholder="Key" data-field="name">
-            </td>
-            <td>
-                <input type="text" class="kv-input value" value="${escapeHtml(item.value)}" 
-                       placeholder="Value" data-field="value">
-            </td>
-            <td class="kv-actions">
-                <button class="kv-delete-btn" data-action="delete" title="Delete">×</button>
-            </td>
-        </tr>
-    `;
-}
-
-function bindKVEvents(container, type, dataArray, renderFn) {
-    const tbody = container.querySelector('tbody');
-    if (!tbody) return;
-
-    tbody.addEventListener('change', (e) => {
-        const row = e.target.closest('tr');
-        const index = parseInt(row?.dataset.index);
-        if (isNaN(index)) return;
-
-        if (e.target.dataset.action === 'toggle') {
-            dataArray[index].enabled = e.target.checked;
-            row.classList.toggle('disabled', !e.target.checked);
-        } else if (e.target.dataset.field) {
-            dataArray[index][e.target.dataset.field] = e.target.value;
-        }
-
-        updateUrlFromParams();
-    });
-
-    tbody.addEventListener('input', (e) => {
-        const row = e.target.closest('tr');
-        const index = parseInt(row?.dataset.index);
-        if (isNaN(index) || !e.target.dataset.field) return;
-
-        dataArray[index][e.target.dataset.field] = e.target.value;
-        updateUrlFromParams();
-    });
-
-    tbody.addEventListener('click', (e) => {
-        if (e.target.dataset.action === 'delete') {
-            const row = e.target.closest('tr');
-            const index = parseInt(row?.dataset.index);
-            if (!isNaN(index)) {
-                dataArray.splice(index, 1);
-                renderFn();
-                updateUrlFromParams();
-            }
-        }
-    });
-}
 
 function updateUrlFromParams() {
     if (!editUrl) return;
@@ -546,7 +465,8 @@ function updateUrlFromParams() {
     try {
         const url = new URL(editUrl.value);
         url.search = '';
-        editableParams.filter(p => p.enabled && p.name).forEach(p => {
+        const enabledParams = paramsEditor ? paramsEditor.getEnabledData() : editableParams.filter(p => p.enabled && p.name);
+        enabledParams.forEach(p => {
             url.searchParams.append(p.name, p.value);
         });
         editUrl.value = url.toString();
@@ -563,9 +483,8 @@ function updateParamsFromUrl() {
         url.searchParams.forEach((value, name) => {
             editableParams.push({ name, value, enabled: true });
         });
-        // Re-render params tab if active
-        if (activeRequestTab === 'params') {
-            renderParams();
+        if (paramsEditor && activeRequestTab === 'params') {
+            paramsEditor.setData(editableParams);
         }
     } catch (e) {
         // Invalid URL, skip
@@ -575,6 +494,44 @@ function updateParamsFromUrl() {
 // ==========================================
 // Body Editor
 // ==========================================
+
+function buildMultipartBody(pairs) {
+    const boundary = '----NetSpyFormBoundary' + Math.random().toString(36).substring(2);
+    let body = '';
+    for (const pair of pairs) {
+        body += `--${boundary}\r\n`;
+        if (pair.type === 'file') {
+            body += `Content-Disposition: form-data; name="${pair.name}"; filename="${pair.fileName}"\r\n\r\n`;
+            body += `${pair.value}\r\n`;
+        } else {
+            body += `Content-Disposition: form-data; name="${pair.name}"\r\n\r\n`;
+            body += `${pair.value}\r\n`;
+        }
+    }
+    body += `--${boundary}--\r\n`;
+    return { body, boundary };
+}
+
+function getBodyForSend() {
+    switch (currentBodyType) {
+        case 'formdata': {
+            if (!bodyEditor) return { body: editableBody, boundary: null };
+            const pairs = bodyEditor.getData().filter(p => p.enabled);
+            return buildMultipartBody(pairs);
+        }
+        case 'urlencoded': {
+            if (!bodyEditor) return { body: '', boundary: null };
+            const pairs = bodyEditor.getEnabledData();
+            const body = pairs.map(p => `${encodeURIComponent(p.name)}=${encodeURIComponent(p.value)}`).join('&');
+            return { body, boundary: null };
+        }
+        case 'json':
+        case 'raw':
+            return { body: editableBodyRaw, boundary: null };
+        default:
+            return { body: '', boundary: null };
+    }
+}
 
 function renderBody() {
     const container = document.getElementById('bodyPane');
@@ -593,7 +550,7 @@ function renderBody() {
             <div class="body-type-selector">
                 ${bodyTypes.map(t => `
                     <label class="body-type ${currentBodyType === t.id ? 'active' : ''}">
-                        <input type="radio" name="bodyType" value="${t.id}" 
+                        <input type="radio" name="bodyType" value="${t.id}"
                                ${currentBodyType === t.id ? 'checked' : ''}>
                         <span>${t.label}</span>
                     </label>
@@ -608,31 +565,53 @@ function renderBody() {
     // Bind body type change
     container.querySelectorAll('input[name="bodyType"]').forEach(radio => {
         radio.addEventListener('change', (e) => {
-            // Cache current body data before switching
-            bodyTypeCache.set(currentBodyType, {
-                body: editableBody,
-                pairs: [...editableBodyPairs]
-            });
+            // Cache current data before switching
+            if (currentBodyType === 'formdata' || currentBodyType === 'urlencoded') {
+                if (bodyEditor) {
+                    bodyTypeCache.set(currentBodyType, { pairs: bodyEditor.getData(), raw: '' });
+                }
+            } else if (currentBodyType === 'json' || currentBodyType === 'raw') {
+                bodyTypeCache.set(currentBodyType, { pairs: [], raw: editableBodyRaw });
+            }
+
+            // Destroy body editor if switching away from KV type
+            if ((currentBodyType === 'formdata' || currentBodyType === 'urlencoded') &&
+                e.target.value !== 'formdata' && e.target.value !== 'urlencoded') {
+                bodyEditor?.destroy();
+                bodyEditor = null;
+            }
 
             currentBodyType = e.target.value;
 
-            // Restore cached data if available
-            const cached = bodyTypeCache.get(currentBodyType);
-            if (cached) {
-                editableBody = cached.body;
-                editableBodyPairs = cached.pairs;
+            // Restore raw from cache if switching to raw/json
+            if (currentBodyType === 'json' || currentBodyType === 'raw') {
+                const cached = bodyTypeCache.get(currentBodyType);
+                if (cached?.raw) {
+                    editableBodyRaw = cached.raw;
+                }
             }
 
             container.querySelectorAll('.body-type').forEach(l => l.classList.remove('active'));
             e.target.closest('.body-type').classList.add('active');
 
             const contentArea = container.querySelector('.body-content-area');
-            if (contentArea) contentArea.innerHTML = renderBodyContent();
+            if (contentArea) {
+                contentArea.innerHTML = renderBodyContent();
+                // Initialize KV editor if needed
+                if (currentBodyType === 'formdata' || currentBodyType === 'urlencoded') {
+                    initBodyKvEditor(container);
+                }
+            }
             bindBodyEvents(container);
         });
     });
 
     bindBodyEvents(container);
+
+    // Initialize KV editor if body type is formdata or urlencoded
+    if (currentBodyType === 'formdata' || currentBodyType === 'urlencoded') {
+        initBodyKvEditor(container);
+    }
 }
 
 function renderBodyContent() {
@@ -641,11 +620,11 @@ function renderBodyContent() {
             return '<div class="body-empty">This request does not have a body</div>';
 
         case 'json':
-            let prettyBody = editableBody;
-            try { prettyBody = prettifyJson(editableBody); } catch (e) { }
+            let prettyBody = editableBodyRaw;
+            try { prettyBody = prettifyJson(editableBodyRaw); } catch (e) { }
             return `
                 <div class="body-textarea-wrapper">
-                    <textarea class="body-textarea json" id="bodyTextarea" 
+                    <textarea class="body-textarea json" id="bodyTextarea"
                               placeholder='{"key": "value"}'>${escapeHtml(prettyBody)}</textarea>
                 </div>
             `;
@@ -653,42 +632,18 @@ function renderBodyContent() {
         case 'raw':
             return `
                 <div class="body-textarea-wrapper">
-                    <textarea class="body-textarea" id="bodyTextarea" 
-                              placeholder="Enter raw body content">${escapeHtml(editableBody)}</textarea>
+                    <textarea class="body-textarea" id="bodyTextarea"
+                              placeholder="Enter raw body content">${escapeHtml(editableBodyRaw)}</textarea>
                 </div>
             `;
 
         case 'urlencoded':
-            const urlencodedPairs = parseUrlEncodedBody(editableBody);
-            return renderKvBodyTable(urlencodedPairs);
-
         case 'formdata':
-            const formDataPairs = parseFormDataBody(editableBody);
-            return renderKvBodyTable(formDataPairs);
+            return '<div id="bodyKvContainer"></div>';
 
         default:
             return '<div class="body-empty">Select a body type</div>';
     }
-}
-
-function renderKvBodyTable(pairs) {
-    return `
-        <table class="kv-table">
-            <thead>
-                <tr><th>Key</th><th>Value</th><th></th></tr>
-            </thead>
-            <tbody id="bodyKvTable">
-                ${pairs.map((p, i) => `
-                    <tr data-index="${i}">
-                        <td><input type="text" class="kv-input" value="${escapeHtml(p.name)}" data-field="name"></td>
-                        <td><textarea class="kv-input kv-value" data-field="value" rows="1">${escapeHtml(p.value)}</textarea></td>
-                        <td><button class="kv-delete-btn" data-action="delete">×</button></td>
-                    </tr>
-                `).join('')}
-            </tbody>
-        </table>
-        <button class="kv-add-btn body-add-btn" id="addBodyKvBtn">+ Add</button>
-    `;
 }
 
 function parseUrlEncodedBody(body) {
@@ -749,6 +704,9 @@ function parseFormDataBody(body) {
         if (dispositionMatch) {
             const name = dispositionMatch[1].trim();
 
+            // Detect filename for file fields
+            const filenameMatch = part.match(/filename\s*=\s*"?([^";\r\n]+)"?/i);
+
             // Find the value (after double line break or just after the header)
             const headerEndIndex = part.indexOf('\r\n\r\n');
             let value = '';
@@ -779,7 +737,18 @@ function parseFormDataBody(body) {
             // Clean up trailing boundary markers
             value = value.replace(/^-{2,}[\w]*$/, '').trim();
 
-            result.push({ name, value });
+            if (filenameMatch) {
+                result.push({
+                    name,
+                    value,
+                    type: 'file',
+                    fileName: filenameMatch[1].trim(),
+                    fileSize: value.length,
+                    enabled: true,
+                });
+            } else {
+                result.push({ name, value, type: 'text', enabled: true });
+            }
         }
     }
 
@@ -790,65 +759,35 @@ function bindBodyEvents(container) {
     const textarea = container.querySelector('#bodyTextarea');
     if (textarea) {
         textarea.addEventListener('input', (e) => {
-            editableBody = e.target.value;
-        });
-    }
-
-    const addBtn = container.querySelector('#addBodyKvBtn');
-    if (addBtn) {
-        addBtn.addEventListener('click', () => {
-            const pairs = parseUrlEncodedBody(editableBody);
-            pairs.push({ name: '', value: '' });
-            editableBody = pairs.map(p => `${encodeURIComponent(p.name)}=${encodeURIComponent(p.value)}`).join('&');
-            const contentArea = container.querySelector('.body-content-area');
-            if (contentArea) contentArea.innerHTML = renderBodyContent();
-            bindBodyEvents(container);
-        });
-    }
-
-    const kvTable = container.querySelector('#bodyKvTable');
-    if (kvTable) {
-        kvTable.addEventListener('input', (e) => {
-            if (e.target.dataset.field) {
-                updateBodyFromKv(container);
-            }
-        });
-        kvTable.addEventListener('click', (e) => {
-            if (e.target.dataset.action === 'delete') {
-                const row = e.target.closest('tr');
-                row?.remove();
-                updateBodyFromKv(container);
-            }
+            editableBodyRaw = e.target.value;
         });
     }
 }
 
-function updateBodyFromKv(container) {
-    const rows = container.querySelectorAll('#bodyKvTable tr');
-    const pairs = [];
-    rows.forEach(row => {
-        const inputs = row.querySelectorAll('.kv-input');
-        if (inputs.length >= 2) {
-            pairs.push({ name: inputs[0].value, value: inputs[1].value });
-        }
+function initBodyKvEditor(container) {
+    const kvContainer = container.querySelector('#bodyKvContainer');
+    if (!kvContainer) return;
+
+    // Destroy previous instance
+    bodyEditor?.destroy();
+
+    bodyEditor = new KeyValueEditor(kvContainer, {
+        placeholder: { key: 'Key', value: 'Value' },
+        showCheckbox: true,
+        showBulkEdit: currentBodyType !== 'formdata',
+        valueAsTextarea: true,
+        itemTypes: currentBodyType === 'formdata' ? ['text', 'file'] : ['text'],
     });
 
-    editableBodyPairs = pairs;
-
-    if (currentBodyType === 'formdata') {
-        // Rebuild as multipart/form-data
-        const boundary = '----NetSpyFormBoundary' + Math.random().toString(36).substr(2);
-        let multipartBody = '';
-        for (const pair of pairs) {
-            multipartBody += `--${boundary}\r\n`;
-            multipartBody += `Content-Disposition: form-data; name="${pair.name}"\r\n\r\n`;
-            multipartBody += `${pair.value}\r\n`;
-        }
-        multipartBody += `--${boundary}--\r\n`;
-        editableBody = multipartBody;
+    // Load data: from cache first, then parse from original body
+    const cached = bodyTypeCache.get(currentBodyType);
+    if (cached?.pairs?.length) {
+        bodyEditor.setData(cached.pairs);
     } else {
-        // URL-encoded format
-        editableBody = pairs.map(p => `${encodeURIComponent(p.name)}=${encodeURIComponent(p.value)}`).join('&');
+        const pairs = currentBodyType === 'formdata'
+            ? parseFormDataBody(editableBody)
+            : parseUrlEncodedBody(editableBody);
+        bodyEditor.setData(pairs);
     }
 }
 
@@ -985,11 +924,11 @@ function renderEditableResponse() {
                         `).join('')}
                         <option value="custom" ${!statusOptions.includes(editableResponseStatus) ? 'selected' : ''}>Custom...</option>
                     </select>
-                    <input type="number" id="editResponseStatusCustom" class="status-input" 
-                           value="${editableResponseStatus}" 
+                    <input type="number" id="editResponseStatusCustom" class="status-input"
+                           value="${editableResponseStatus}"
                            style="display: ${statusOptions.includes(editableResponseStatus) ? 'none' : 'inline-block'}">
                 </div>
-                
+
                 <div class="response-body-editor">
                     <div class="response-body-header">
                         <label>Response Body:</label>
@@ -998,7 +937,7 @@ function renderEditableResponse() {
                             <button class="body-action-btn" id="minifyJsonBtn" title="Minify JSON">📦 Minify</button>
                         </div>
                     </div>
-                    <textarea id="editResponseBody" class="response-body-textarea" 
+                    <textarea id="editResponseBody" class="response-body-textarea"
                               placeholder="Enter response body...">${escapeHtml(displayBody)}</textarea>
                 </div>
             </div>
@@ -1055,61 +994,17 @@ function renderEditableResponse() {
     }
 
     if (headersPane) {
-        // Editable headers table
-        headersPane.innerHTML = `
-            <div class="kv-editor">
-                <div class="kv-header">
-                    <span class="kv-title">Response Headers</span>
-                    <button class="kv-add-btn" id="addResHeaderBtn">+ Add</button>
-                </div>
-                <table class="kv-table">
-                    <thead><tr><th></th><th>Name</th><th>Value</th><th></th></tr></thead>
-                    <tbody id="resHeadersTable">
-                        ${editableResponseHeaders.map((h, i) => `
-                            <tr data-index="${i}">
-                                <td><input type="checkbox" class="kv-checkbox" ${h.enabled ? 'checked' : ''} data-field="enabled"></td>
-                                <td><input type="text" class="kv-input" value="${escapeHtml(h.name)}" data-field="name"></td>
-                                <td><input type="text" class="kv-input" value="${escapeHtml(h.value)}" data-field="value"></td>
-                                <td><button class="kv-delete-btn" data-action="delete">×</button></td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            </div>
-        `;
-
-        // Bind header events
-        const addBtn = headersPane.querySelector('#addResHeaderBtn');
-        const table = headersPane.querySelector('#resHeadersTable');
-
-        addBtn?.addEventListener('click', () => {
-            editableResponseHeaders.push({ name: '', value: '', enabled: true });
-            renderEditableResponse();
-        });
-
-        table?.addEventListener('input', (e) => {
-            const row = e.target.closest('tr');
-            const index = parseInt(row?.dataset.index);
-            const field = e.target.dataset.field;
-            if (index >= 0 && field) {
-                if (field === 'enabled') {
-                    editableResponseHeaders[index].enabled = e.target.checked;
-                } else {
-                    editableResponseHeaders[index][field] = e.target.value;
-                }
-            }
-        });
-
-        table?.addEventListener('click', (e) => {
-            if (e.target.dataset.action === 'delete') {
-                const row = e.target.closest('tr');
-                const index = parseInt(row?.dataset.index);
-                if (index >= 0) {
-                    editableResponseHeaders.splice(index, 1);
-                    renderEditableResponse();
-                }
-            }
-        });
+        if (!responseHeadersEditor) {
+            responseHeadersEditor = new KeyValueEditor(headersPane, {
+                placeholder: { key: 'Header', value: 'Value' },
+                showCheckbox: true,
+                showBulkEdit: true,
+            });
+            responseHeadersEditor.onChange(() => {
+                editableResponseHeaders = responseHeadersEditor.getData();
+            });
+        }
+        responseHeadersEditor.setData(editableResponseHeaders);
     }
 }
 
@@ -1144,4 +1039,3 @@ export function downloadResponseBody() {
     a.click();
     URL.revokeObjectURL(url);
 }
-
