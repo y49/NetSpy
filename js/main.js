@@ -750,16 +750,12 @@ async function sendRequest() {
                 requestBody = values.body;
                 break;
             case 'formdata':
-                if (values.bodyModified) {
-                    // Body was rebuilt — use new boundary
-                    if (values.bodyBoundary) {
-                        contentType = `multipart/form-data; boundary=${values.bodyBoundary}`;
-                    } else {
-                        contentType = 'multipart/form-data';
-                    }
-                    requestBody = values.body;
+                if (values.bodyBoundary) {
+                    contentType = `multipart/form-data; boundary=${values.bodyBoundary}`;
+                } else {
+                    contentType = 'multipart/form-data';
                 }
-                // If not modified, keep original Content-Type header (with original boundary)
+                requestBody = values.body;
                 break;
             case 'raw':
                 requestBody = values.body;
@@ -902,18 +898,13 @@ async function sendRequest() {
                 const maxRetries = 3;
 
                 while (retryCount < maxRetries) {
-                    const modifications = {};
-
-                    if (values.bodyType === 'formdata' && !values.bodyModified) {
-                        // Formdata body NOT modified — pass nothing, let Chrome
-                        // use the entire original request as-is (preserves binary files)
-                    } else {
-                        modifications.url = values.url;
-                        modifications.method = values.method;
-                        modifications.headers = headersArray;
-                        if (requestBody !== undefined) {
-                            modifications.postData = requestBody;
-                        }
+                    const modifications = {
+                        url: values.url,
+                        method: values.method,
+                        headers: headersArray,
+                    };
+                    if (requestBody !== undefined) {
+                        modifications.postData = requestBody;
                     }
 
                     response = await chrome.runtime.sendMessage({
