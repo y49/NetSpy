@@ -380,30 +380,11 @@ async function continueRequest(tabId, requestId, modifications = {}) {
             }));
         }
         if (modifications.postData) {
-            let postDataStr = modifications.postData;
-
-            if (typeof postDataStr === 'object' && postDataStr.type === 'formdata' && postDataStr.pairs) {
-                // Build multipart/form-data body preserving the format
-                const boundary = '----NetSpyFormBoundary' + Math.random().toString(36).substr(2);
-                let multipartBody = '';
-                for (const pair of postDataStr.pairs) {
-                    multipartBody += `--${boundary}\r\n`;
-                    multipartBody += `Content-Disposition: form-data; name="${pair.name}"\r\n\r\n`;
-                    multipartBody += `${pair.value}\r\n`;
-                }
-                multipartBody += `--${boundary}--\r\n`;
-                postDataStr = multipartBody;
-
-                // Update Content-Type with boundary
-                if (params.headers) {
-                    params.headers = params.headers.filter(h => h.name.toLowerCase() !== 'content-type');
-                    params.headers.push({ name: 'Content-Type', value: `multipart/form-data; boundary=${boundary}` });
-                } else {
-                    params.headers = [{ name: 'Content-Type', value: `multipart/form-data; boundary=${boundary}` }];
-                }
-            } else if (typeof postDataStr === 'object') {
-                postDataStr = JSON.stringify(postDataStr);
-            }
+            // postData is now always a pre-serialized string (including multipart)
+            // Content-Type with boundary is already set in the headers by the panel
+            const postDataStr = typeof modifications.postData === 'string'
+                ? modifications.postData
+                : JSON.stringify(modifications.postData);
 
             params.postData = EncodingUtils.utf8ToBase64(postDataStr);
         }

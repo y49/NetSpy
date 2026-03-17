@@ -765,9 +765,16 @@ async function sendRequest() {
                 break;
         }
 
-        // Set content-type header
+        // Set content-type header (update both headersObject and headersArray)
         if (contentType) {
             headersObject['Content-Type'] = contentType;
+            // Update headersArray to match — replace existing Content-Type or add new one
+            const ctIdx = headersArray.findIndex(h => h.name.toLowerCase() === 'content-type');
+            if (ctIdx >= 0) {
+                headersArray[ctIdx].value = contentType;
+            } else {
+                headersArray.push({ name: 'Content-Type', value: contentType });
+            }
         }
 
         let response;
