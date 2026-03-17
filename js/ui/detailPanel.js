@@ -522,7 +522,13 @@ function buildMultipartBody(pairs) {
 function getBodyForSend() {
     switch (currentBodyType) {
         case 'formdata': {
-            if (!bodyEditor) return { body: editableBody, boundary: null, pairs: null };
+            if (!bodyEditor) {
+                // Editor not initialized — use original body with original boundary
+                const ct = getHeaderValue(currentRequest?.headers, 'content-type') || '';
+                const bMatch = ct.match(/boundary=([^\s;]+)/i);
+                const originalBoundary = bMatch ? bMatch[1].replace(/^["']|["']$/g, '') : null;
+                return { body: editableBody, boundary: originalBoundary, pairs: null };
+            }
             const pairs = bodyEditor.getData().filter(p => p.enabled);
             const result = buildMultipartBody(pairs);
             result.pairs = pairs; // Also pass pairs for FormData API in replay
