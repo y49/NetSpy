@@ -743,7 +743,7 @@ function parseFormDataBody(body) {
                     value,
                     type: 'file',
                     fileName: filenameMatch[1].trim(),
-                    fileSize: value.length,
+                    fileSize: 0,
                     enabled: true,
                 });
             } else {

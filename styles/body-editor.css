@@ -115,10 +115,6 @@
   color: var(--accent-primary);
 }
 
-.body-add-btn {
-  margin-top: var(--spacing-md);
-  width: 100%;
-}
 
 /* KV Table in Body */
 .body-content-area .kv-table {

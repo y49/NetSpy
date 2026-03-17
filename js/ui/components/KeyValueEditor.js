@@ -51,7 +51,7 @@ export class KeyValueEditor {
     setData(items) {
         this.items = (items || []).map(item => ({
             name: item.name || item.key || '',
-            value: item.value || '',
+            value: item.value ?? '',
             enabled: item.enabled !== false,
             description: item.description || '',
             type: item.type || 'text',
