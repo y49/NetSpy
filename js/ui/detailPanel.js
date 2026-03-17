@@ -503,7 +503,8 @@ function buildMultipartBody(pairs) {
     for (const pair of pairs) {
         body += `--${boundary}\r\n`;
         if (pair.type === 'file') {
-            body += `Content-Disposition: form-data; name="${pair.name}"; filename="${pair.fileName}"\r\n\r\n`;
+            body += `Content-Disposition: form-data; name="${pair.name}"; filename="${pair.fileName}"\r\n`;
+            body += `Content-Type: ${pair.contentType || 'application/octet-stream'}\r\n\r\n`;
             body += `${pair.value}\r\n`;
         } else {
             body += `Content-Disposition: form-data; name="${pair.name}"\r\n\r\n`;
@@ -739,12 +740,17 @@ function parseFormDataBody(body) {
             value = value.replace(/^-{2,}[\w]*$/, '').trim();
 
             if (filenameMatch) {
+                // Extract Content-Type for file parts
+                const contentTypeMatch = part.match(/Content-Type:\s*([^\r\n]+)/i);
+                const contentType = contentTypeMatch ? contentTypeMatch[1].trim() : 'application/octet-stream';
+
                 result.push({
                     name,
                     value,
                     type: 'file',
                     fileName: filenameMatch[1].trim(),
                     fileSize: 0,
+                    contentType,
                     enabled: true,
                 });
             } else {

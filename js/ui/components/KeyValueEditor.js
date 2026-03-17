@@ -57,6 +57,7 @@ export class KeyValueEditor {
             type: item.type || 'text',
             fileName: item.fileName || '',
             fileSize: item.fileSize || 0,
+            contentType: item.contentType || '',
         }));
         this.renderItems();
     }
@@ -73,6 +74,7 @@ export class KeyValueEditor {
             type: item.type,
             fileName: item.fileName,
             fileSize: item.fileSize,
+            contentType: item.contentType,
         }));
     }
 
